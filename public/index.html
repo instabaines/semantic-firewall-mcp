@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hardened MCP Gateway Dashboard</title>
+    <link rel="stylesheet" href="/dashboard/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Trusted Enforcement Layer</p>
+          <h1>Hardened MCP Gateway</h1>
+          <p class="lede">
+            Live view of intent passports, semantic policy decisions, approval gates, and protected MCP tool execution.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="enable-notifications" class="button secondary">Enable Notifications</button>
+          <div id="connection-status" class="status-pill">
+            <span class="status-dot"></span>
+            Connecting dashboard
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="section-head compact">
+            <h2>Pending Approvals</h2>
+            <p id="runtime-meta">Awaiting runtime metadata</p>
+          </div>
+          <div id="approvals" class="stack"></div>
+        </article>
+
+        <article class="card">
+          <h2>Datasets</h2>
+          <div id="datasets" class="stack"></div>
+        </article>
+
+        <article class="card">
+          <h2>Reports</h2>
+          <div id="reports" class="stack"></div>
+        </article>
+
+        <article class="card timeline-card">
+          <div class="section-head">
+            <h2>Event Timeline</h2>
+            <p>Readable labels for the live narrative from prompt to enforcement.</p>
+          </div>
+          <div id="events" class="timeline"></div>
+        </article>
+      </section>
+    </main>
+
+    <script type="module" src="/dashboard/app.js"></script>
+  </body>
+  </html>

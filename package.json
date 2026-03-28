@@ -1,0 +1,35 @@
+{
+  "name": "hardened_mcp_gateway",
+  "version": "1.0.0",
+  "description": "Semantic proxy demo for hardened MCP tool mediation",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:proxy": "node src/index.js proxy",
+    "start:protected": "node src/index.js protected",
+    "start:inspector": "node src/index.js inspector",
+    "start:orchestrator": "node src/index.js orchestrator",
+    "demo:allow": "node src/demo/client.js allow",
+    "demo:block": "node src/demo/client.js block",
+    "demo:approve": "node src/demo/client.js approve",
+    "demo:guided": "node src/demo/guided-attack.js",
+    "presenter": "node src/demo/presenter-mode.js",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/sensible": "^6.0.4",
+    "@fastify/static": "^9.0.0",
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "better-sqlite3": "^12.8.0",
+    "fastify": "^5.8.4",
+    "jsonwebtoken": "^9.0.3",
+    "undici": "^7.24.6"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.2"
+  }
+}
