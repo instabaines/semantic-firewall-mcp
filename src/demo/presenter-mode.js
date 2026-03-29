@@ -29,6 +29,12 @@ function startStack() {
   });
 }
 
+function waitForExit(child) {
+  return new Promise((resolve) => {
+    child.once("exit", (code, signal) => resolve({ code, signal }));
+  });
+}
+
 async function waitFor(url, attempts = 40) {
   for (let i = 0; i < attempts; i += 1) {
     try {
@@ -63,14 +69,27 @@ async function callDemo(script) {
 }
 
 export async function main() {
+  const autoRun = process.env.PRESENTER_AUTO_RUN !== "0";
+
   console.log("");
   console.log("Presenter mode starting");
   console.log(`Dashboard: http://127.0.0.1:${presenterPorts.proxyPort}/dashboard/`);
+  console.log(`Manual demo target: proxy ${presenterPorts.proxyPort}, orchestrator ${presenterPorts.orchestratorPort}`);
   console.log("");
 
   const stack = startStack();
+  let releaseShutdownWait;
+  const shutdownWait = new Promise((resolve) => {
+    releaseShutdownWait = resolve;
+  });
 
+  let shuttingDown = false;
   const shutdown = () => {
+    if (shuttingDown) {
+      return;
+    }
+    shuttingDown = true;
+    releaseShutdownWait?.();
     if (!stack.killed) {
       stack.kill("SIGTERM");
     }
@@ -81,29 +100,39 @@ export async function main() {
 
   try {
     await waitFor(`http://127.0.0.1:${presenterPorts.proxyPort}/health`);
+    console.log("Presenter stack is live. External demo commands will use the active runtime file.");
 
-    console.log("Phase 1: benign report request");
-    await callDemo("demo:allow");
-    await delay(1500);
+    if (autoRun) {
+      console.log("Phase 1: benign report request");
+      await callDemo("demo:allow");
+      await delay(1500);
 
-    console.log("");
-    console.log("Phase 2: cross-resource attack attempt");
-    await callDemo("demo:block");
-    await delay(1500);
+      console.log("");
+      console.log("Phase 2: cross-resource attack attempt");
+      await callDemo("demo:block");
+      await delay(1500);
 
-    console.log("");
-    console.log("Phase 3: in-scope but suspicious export requiring approval");
-    await callDemo("demo:approve");
-    await delay(1000);
+      console.log("");
+      console.log("Phase 3: in-scope but suspicious export requiring approval");
+      await callDemo("demo:approve");
+      await delay(1000);
 
-    console.log("");
-    console.log("Presenter mode complete. Leave the dashboard open to discuss the event timeline.");
+      console.log("");
+      console.log("Scripted presenter sequence complete.");
+    } else {
+      console.log("Auto-run disabled. Trigger demo commands manually from another terminal.");
+    }
+
+    console.log("Presenter stack will stay up until you press Ctrl+C.");
+    await shutdownWait;
   } catch (error) {
     console.error(error);
     process.exitCode = 1;
   } finally {
-    await delay(1000);
     shutdown();
+    await waitForExit(stack);
+    process.off("SIGINT", shutdown);
+    process.off("SIGTERM", shutdown);
   }
 }
 

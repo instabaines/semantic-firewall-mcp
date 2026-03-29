@@ -18,6 +18,74 @@ The demo is designed for security presentations, architecture reviews, and proof
 - local-model inspection of suspicious tool use
 - human approval for high-risk but technically authorized actions
 
+## Quick Start
+
+For the simplest manual run:
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Start the stack:
+
+```bash
+OLLAMA_HOST=127.0.0.1:11434 OLLAMA_MODEL=qwen3-vl:8b npm start
+```
+
+3. Open the dashboard:
+
+```text
+http://127.0.0.1:4000/dashboard/
+```
+
+4. In a second terminal, run a scenario:
+
+```bash
+npm run demo:allow
+```
+
+For a talk or rehearsal, the recommended path is:
+
+```bash
+PRESENTER_AUTO_RUN=0 npm run presenter
+```
+
+Then open:
+
+```text
+http://127.0.0.1:4500/dashboard/
+```
+
+And trigger scenarios manually from another terminal:
+
+```bash
+npm run demo:allow
+npm run demo:block
+npm run demo:approve
+```
+
+If the model host is unavailable or unstable, omit `REQUIRE_MODEL=1` so the demo can fall back instead of failing closed during setup.
+
+## Demo Story
+
+The three primary scenarios are:
+
+- `demo:allow`
+  A normal report-generation request that should pass end to end and create a report.
+- `demo:block`
+  A request that violates resource binding and should be blocked by the proxy before the protected MCP server is reached.
+- `demo:approve`
+  A suspicious but technically authorized request that should pause for human approval.
+
+When the demo is working, the dashboard should show:
+
+- a growing event timeline
+- new reports after successful `generate_report` calls
+- temporary approval items during approval-gated flows
+- the active audience, sender thumbprint, and last request verification state
+
 ## Overview
 
 The system contains five cooperating components:
@@ -41,7 +109,11 @@ When the orchestrator receives the original prompt, it creates a signed JWT with
 - `tool_scopes`
 - `resource_indicators`
 - `rationale`
+- `aud`
+- `cnf.jkt`
 - JWT timing claims
+
+The passport is audience-bound to the protected resource server and sender-constrained to the proxy's proof-of-possession key.
 
 Relevant files:
 
@@ -54,16 +126,20 @@ Relevant files:
 The proxy intercepts MCP requests at `POST /mcp` and enforces:
 
 - JWT verification
+- audience binding
 - tool scope checks
 - resource binding checks
 - semantic inspection
 - human approval for suspicious calls
+
+When forwarding to the protected MCP server, the proxy attaches a DPoP-style proof signed with its private key. The protected server verifies both the passport and the proof before executing any tool.
 
 Relevant files:
 
 - `src/semantic-proxy/server.js`
 - `src/semantic-proxy/policy-engine.js`
 - `src/semantic-proxy/approval-gate.js`
+- `src/semantic-proxy/inspector-client.js`
 
 ### Inspector
 
@@ -80,6 +156,13 @@ Relevant files:
 
 The protected server uses the official MCP SDK and exposes real tools over Streamable HTTP.
 
+Before serving any MCP request, it verifies:
+
+- the passport signature
+- the expected audience
+- the sender-constrained `cnf.jkt` binding
+- the accompanying DPoP proof
+
 Tools currently included:
 
 - `list_datasets`
@@ -94,6 +177,7 @@ Relevant files:
 
 - `src/protected-resource/server.js`
 - `src/protected-resource/demo-db.js`
+- `src/protected-resource/auth.js`
 
 ### Dashboard and Approval Flow
 
@@ -146,6 +230,7 @@ The repository now includes a protocol-oriented layer intended to be reusable ou
 - `src/protocol/contextual-passport.js`
 - `src/protocol/inspection.js`
 - `src/protocol/events.js`
+- `src/protocol/sender-constrained.js`
 - `src/protocol/index.js`
 
 These files define the shared concepts that other projects can adopt even if they implement their own:
@@ -183,10 +268,13 @@ This project demonstrates the following security properties:
 
 - Intent-bound authorization: tool use is evaluated against the original user request, not only static tool permissions.
 - Signed contextual binding: the orchestrator issues a signed JWT that carries the semantic summary, allowed tool scopes, and resource indicators for the session.
+- Audience binding against the protected resource server: a passport issued for one resource server cannot be replayed against another trusted resource.
+- Sender-constrained token use: the protected resource requires a DPoP-style proof tied to the proxy's private key, so possession of the JWT string alone is not sufficient.
 - Resource binding enforcement: a tool call can be denied even if the tool itself is authorized, when the requested dataset or target resource falls outside the bound context.
 - Semantic inspection before execution: suspicious calls are evaluated before they reach the protected MCP server.
 - Human approval for high-risk actions: calls that are technically authorized but semantically suspicious can be paused for review instead of immediately executing.
 - Protected-side isolation: the protected MCP server is not reached when the proxy denies or holds a call.
+- Short-lived permits: passports are intentionally short-lived and scoped to the current task.
 - Auditability for demos and reviews: the dashboard and event stream make enforcement decisions visible in real time.
 
 This project does not claim the following:
@@ -217,6 +305,13 @@ npm install
 
 The model integration expects an Ollama-compatible endpoint.
 
+The runtime accepts either:
+
+- `OLLAMA_HOST=127.0.0.1`
+- `OLLAMA_HOST=127.0.0.1:11434`
+- `OLLAMA_HOST=http://127.0.0.1:11434`
+- `OLLAMA_URL=http://127.0.0.1:11434/api/generate`
+
 Default:
 
 ```bash
@@ -235,6 +330,12 @@ If the model host is running elsewhere:
 OLLAMA_HOST=HOST:11434
 ```
 
+A bare host is also accepted and will default to port `11434`:
+
+```bash
+OLLAMA_HOST=192.168.0.141
+```
+
 If necessary, the full generate endpoint can be overridden directly:
 
 ```bash
@@ -245,6 +346,10 @@ Notes:
 
 - `REQUIRE_MODEL=1` forces model-backed paths to succeed or fail explicitly.
 - Without `REQUIRE_MODEL=1`, the system may fall back to deterministic logic if the model call fails.
+- Passports are short-lived by default. Override with `PASSPORT_TTL_SECONDS` only if you intentionally need a longer-lived demo token.
+- The model client accepts single JSON responses and streamed NDJSON chunk responses from Ollama.
+- Some models, including `qwen3-vl:8b`, may place useful JSON in `thinking` rather than `response`. The current parser handles that shape.
+- After changing model-related environment variables or parser code, restart the stack. Running processes do not hot-reload configuration.
 
 ## Running the System
 
@@ -264,7 +369,7 @@ http://127.0.0.1:4000/dashboard/
 
 ### Presenter Mode
 
-Presenter mode starts the stack on presenter-safe ports and runs the full scripted story automatically.
+Presenter mode starts the stack on presenter-safe ports, writes those ports to `.runtime/active-stack.json`, and keeps the stack running until you stop it.
 
 ```bash
 npm run presenter
@@ -276,7 +381,15 @@ Open:
 http://127.0.0.1:4500/dashboard/
 ```
 
-Presenter mode is the recommended path for live demos.
+By default, presenter mode also runs the scripted `allow -> block -> approve` sequence once and then leaves the stack up for discussion or extra manual demo commands.
+
+If you want presenter-safe ports without the scripted sequence, use:
+
+```bash
+PRESENTER_AUTO_RUN=0 npm run presenter
+```
+
+Presenter mode is the recommended path for live demos and rehearsals.
 
 ## Port Alignment and Runtime Discovery
 
@@ -290,6 +403,8 @@ The demo scripts read this file automatically. That means:
 - if `npm run presenter` is the active stack, `npm run demo:allow` targets the presenter stack
 
 The dashboard also shows the active proxy and orchestrator ports so mismatches are visible.
+
+Each `demo:*` command also prints the proxy and orchestrator ports it is targeting before sending the request.
 
 ## Demo Commands
 
@@ -313,6 +428,8 @@ What they do:
 - `demo:guided`
   Runs a narrated, step-by-step version of the full attacker story.
 
+Before running a demo command, make sure the stack is already running with either `npm start` or `npm run presenter`.
+
 ## What to Expect in the Dashboard
 
 During a successful demo run, the dashboard should show:
@@ -323,6 +440,14 @@ During a successful demo run, the dashboard should show:
 - runtime metadata showing which stack the dashboard belongs to
 
 If reports appear but the timeline does not update, that usually indicates you are looking at a different running stack than the one receiving the demo traffic.
+
+If a demo command fails before the dashboard changes:
+
+- `Invalid Intent JWT` usually means the demo command reached a different stack than the dashboard.
+- `connect ECONNREFUSED ...11434` usually means the model host or port is wrong.
+- `Model returned an empty response body` usually means the selected model returned an unsupported or incomplete payload shape, or the stack needs to be restarted after a parser/config fix.
+
+The demo client now validates that the proxy and orchestrator look like the active stack before it sends the scenario request.
 
 ## Testing
 
@@ -356,6 +481,7 @@ The test suite covers:
 - Generated reports are stored in SQLite and therefore persist across restarts unless the database is cleared.
 - Model-backed behavior depends on the availability and health of the configured Ollama-compatible host.
 - Large local models may fail for environment-specific reasons such as memory pressure.
+- The current DPoP-style sender constraint is a focused implementation for this demo and reference architecture, not a full production OAuth deployment.
 
 ## Recommended Demo Flow
 

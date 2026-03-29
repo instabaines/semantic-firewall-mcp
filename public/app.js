@@ -5,6 +5,10 @@ const eventsEl = document.querySelector("#events");
 const notificationsButton = document.querySelector("#enable-notifications");
 const connectionStatusEl = document.querySelector("#connection-status");
 const runtimeMetaEl = document.querySelector("#runtime-meta");
+const securityAudienceEl = document.querySelector("#security-audience");
+const securityThumbprintEl = document.querySelector("#security-thumbprint");
+const securityModelBackedEl = document.querySelector("#security-model-backed");
+const securityDpopVerifiedEl = document.querySelector("#security-dpop-verified");
 
 let notificationsEnabled = false;
 let eventStreamHealthy = false;
@@ -42,6 +46,10 @@ const EVENT_META = {
   "proxy.rpc_passthrough": {
     title: "Non-Tool RPC Passed Through",
     chip: "Proxy",
+  },
+  "resource.auth_verified": {
+    title: "Protected Resource Verified DPoP",
+    chip: "Auth",
   },
 };
 
@@ -149,6 +157,32 @@ function renderRuntime(runtime) {
   runtimeMetaEl.textContent = `Proxy ${runtime.proxyPort} · Orch ${runtime.orchestratorPort} · PID ${runtime.pid}`;
 }
 
+function renderBooleanStatus(element, value) {
+  element.classList.remove("ok", "danger", "muted");
+  if (value === true) {
+    element.textContent = "Yes";
+    element.classList.add("ok");
+    return;
+  }
+  if (value === false) {
+    element.textContent = "No";
+    element.classList.add("danger");
+    return;
+  }
+  element.textContent = "Unknown";
+  element.classList.add("muted");
+}
+
+function renderSecurity(security, runtime) {
+  const audience = security?.currentAudience || runtime?.protectedResourceAudience || "Unknown";
+  const thumbprint = security?.senderConstraintThumbprint || runtime?.senderConstraintThumbprint || "Unknown";
+
+  securityAudienceEl.textContent = audience;
+  securityThumbprintEl.textContent = thumbprint;
+  renderBooleanStatus(securityModelBackedEl, security?.lastRequestModelBacked ?? null);
+  renderBooleanStatus(securityDpopVerifiedEl, security?.lastRequestDpopVerified ?? null);
+}
+
 async function loadState() {
   const response = await fetch("/api/state", { cache: "no-store" });
   const state = await response.json();
@@ -161,6 +195,7 @@ async function loadState() {
   renderDatasets(state.datasets || []);
   renderReports(state.reports || []);
   renderRuntime(state.runtime);
+  renderSecurity(state.security, state.runtime);
   eventsEl.innerHTML = "";
   [...(state.recentEvents || [])].reverse().forEach(renderEvent);
   return state;

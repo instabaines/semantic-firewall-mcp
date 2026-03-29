@@ -8,6 +8,19 @@ export function getRuntimeFilePath() {
   return runtimeFile;
 }
 
+function processExists(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) {
+    return false;
+  }
+
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function writeRuntimeEnv(config) {
   fs.mkdirSync(runtimeDir, { recursive: true });
   const payload = {
@@ -15,8 +28,11 @@ export function writeRuntimeEnv(config) {
     protectedPort: config.protectedPort,
     inspectorPort: config.inspectorPort,
     orchestratorPort: config.orchestratorPort,
+    protectedResourceAudience: config.protectedResourceAudience,
+    passportTtlSeconds: config.passportTtlSeconds,
     ollamaUrl: config.ollamaUrl,
     ollamaModel: config.ollamaModel,
+    senderConstraintThumbprint: config.senderConstraint.thumbprint,
     updatedAt: new Date().toISOString(),
     pid: process.pid,
   };
@@ -27,7 +43,11 @@ export function writeRuntimeEnv(config) {
 export function readRuntimeEnv() {
   try {
     const raw = fs.readFileSync(runtimeFile, "utf8");
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!processExists(parsed.pid)) {
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }

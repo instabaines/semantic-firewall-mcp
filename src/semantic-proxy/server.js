@@ -6,16 +6,26 @@ import { ApprovalStore } from "./approval-gate.js";
 import { listDatasets, listReports } from "../protected-resource/demo-db.js";
 import { eventBus } from "../dashboard/event-bus.js";
 import { extractIntentToken, verifyIntentPassport } from "../protocol/contextual-passport.js";
+import { createDpopProof } from "../protocol/sender-constrained.js";
 import { buildPolicyContext, checkResourceBinding, checkToolScope, extractTargetResources, isHighRiskTool } from "./policy-engine.js";
 import { readRuntimeEnv } from "../runtime/active-stack.js";
 import { inspectAction } from "./inspector-client.js";
 
-async function forwardRpc(config, body) {
+async function forwardRpc(config, body, accessToken) {
+  const dpop = createDpopProof({
+    config,
+    accessToken,
+    method: "POST",
+    url: config.upstreamUrl,
+  });
+
   const response = await httpRequest(config.upstreamUrl, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       accept: "application/json, text/event-stream",
+      authorization: `Bearer ${accessToken}`,
+      dpop,
     },
     body: JSON.stringify(body),
   });
@@ -39,7 +49,21 @@ export function buildProxyServer(config, overrides = {}) {
   const app = Fastify({ logger: true });
   const approvals = new ApprovalStore({ timeoutMs: config.approvalTimeoutMs, eventBus });
   const inspect = overrides.inspectAction || ((input) => inspectAction(input));
-  const forward = overrides.forwardRpc || ((body) => forwardRpc(config, body));
+  const forward = overrides.forwardRpc || ((body, accessToken) => forwardRpc(config, body, accessToken));
+  const securityState = {
+    currentAudience: config.protectedResourceAudience,
+    senderConstraintThumbprint: config.senderConstraint.thumbprint,
+    lastRequestModelBacked: null,
+    lastRequestDpopVerified: null,
+  };
+  const onEvent = (event) => {
+    if (event.type !== "resource.auth_verified") {
+      return;
+    }
+    securityState.currentAudience = event.payload.audience || securityState.currentAudience;
+    securityState.senderConstraintThumbprint = event.payload.senderConstraintThumbprint || securityState.senderConstraintThumbprint;
+    securityState.lastRequestDpopVerified = Boolean(event.payload.dpopVerified);
+  };
 
   app.register(sensible);
   app.register(fastifyStatic, {
@@ -47,6 +71,10 @@ export function buildProxyServer(config, overrides = {}) {
     prefix: "/dashboard/",
   });
   app.decorate("approvals", approvals);
+  eventBus.on("event", onEvent);
+  app.addHook("onClose", async () => {
+    eventBus.off("event", onEvent);
+  });
 
   app.get("/", async (_request, reply) => reply.redirect("/dashboard/"));
 
@@ -61,6 +89,7 @@ export function buildProxyServer(config, overrides = {}) {
     datasets: listDatasets(config),
     reports: listReports(config),
     runtime: readRuntimeEnv(),
+    security: { ...securityState },
   }));
 
   app.get("/approvals", async () => ({
@@ -106,20 +135,22 @@ export function buildProxyServer(config, overrides = {}) {
 
   app.post("/mcp", async (request, reply) => {
     const rpc = request.body;
-
-    if (rpc.method !== "tools/call") {
-      eventBus.publish("proxy.rpc_passthrough", { method: rpc.method });
-      return forward(rpc);
-    }
-
     const token = extractIntentToken(request);
+
     if (!token) {
       return reply.forbidden("Missing Intent JWT");
     }
 
+    if (rpc.method !== "tools/call") {
+      eventBus.publish("proxy.rpc_passthrough", { method: rpc.method });
+      return forward(rpc, token);
+    }
+
     let passport;
     try {
-      passport = verifyIntentPassport(token, config);
+      passport = verifyIntentPassport(token, config, {
+        audience: config.protectedResourceAudience,
+      });
     } catch (error) {
       request.log.warn({ err: error }, "Intent JWT verification failed");
       return reply.forbidden("Invalid Intent JWT");
@@ -138,6 +169,8 @@ export function buildProxyServer(config, overrides = {}) {
     });
 
     if (!checkToolScope(passport, toolCall.name)) {
+      securityState.lastRequestModelBacked = false;
+      securityState.lastRequestDpopVerified = false;
       eventBus.publish("proxy.denied", {
         reason: "scope_mismatch",
         toolName: toolCall.name,
@@ -159,6 +192,8 @@ export function buildProxyServer(config, overrides = {}) {
     }
 
     if (!checkResourceBinding(passport, toolCall)) {
+      securityState.lastRequestModelBacked = false;
+      securityState.lastRequestDpopVerified = false;
       eventBus.publish("proxy.denied", {
         reason: "resource_binding_mismatch",
         toolName: toolCall.name,
@@ -180,6 +215,8 @@ export function buildProxyServer(config, overrides = {}) {
     }
 
     const inspector = await inspect({ config, passport, toolCall });
+    securityState.lastRequestModelBacked = inspector.model !== "heuristic-slm";
+    securityState.lastRequestDpopVerified = false;
     const policyContext = buildPolicyContext(passport, toolCall);
     const needsApproval = inspector.violation && inspector.confidence >= config.violationThreshold;
     const autoBlock = inspector.violation && !isHighRiskTool(toolCall.name) && inspector.confidence >= 0.95;
@@ -239,7 +276,7 @@ export function buildProxyServer(config, overrides = {}) {
       }
     }
 
-    const forwarded = await forward(rpc);
+    const forwarded = await forward(rpc, token);
     eventBus.publish("proxy.forwarded", {
       toolName: toolCall.name,
       summary: passport.summary,

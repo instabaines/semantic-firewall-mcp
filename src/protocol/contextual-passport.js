@@ -10,7 +10,7 @@ export function issueIntentPassport({
   resources,
   sessionId,
   config,
-  ttlSeconds = 900,
+  ttlSeconds = config.passportTtlSeconds,
 }) {
   const now = Math.floor(Date.now() / 1000);
   const payload = {
@@ -22,6 +22,9 @@ export function issueIntentPassport({
     tool_scopes: toolScopes,
     resource_indicators: resources,
     passport_type: "contextual-passport",
+    cnf: {
+      jkt: config.senderConstraint.thumbprint,
+    },
     iat: now,
     nbf: now,
     exp: now + ttlSeconds,
@@ -29,17 +32,17 @@ export function issueIntentPassport({
 
   const token = jwt.sign(payload, config.jwtSecret, {
     issuer: config.issuer,
-    audience: config.audience,
+    audience: config.protectedResourceAudience,
     algorithm: "HS256",
   });
 
   return { token, payload };
 }
 
-export function verifyIntentPassport(token, config) {
+export function verifyIntentPassport(token, config, overrides = {}) {
   return jwt.verify(token, config.jwtSecret, {
     issuer: config.issuer,
-    audience: config.audience,
+    audience: overrides.audience || config.protectedResourceAudience,
     algorithms: ["HS256"],
   });
 }

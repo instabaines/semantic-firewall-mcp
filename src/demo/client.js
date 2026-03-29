@@ -2,23 +2,30 @@ import { request } from "undici";
 import { config } from "../runtime/config.js";
 import { readRuntimeEnv } from "../runtime/active-stack.js";
 
-const runtime = readRuntimeEnv();
-const ports = {
-  proxyPort: Number(process.env.PROXY_PORT || runtime?.proxyPort || config.proxyPort),
-  orchestratorPort: Number(process.env.ORCHESTRATOR_PORT || runtime?.orchestratorPort || config.orchestratorPort),
-};
+function resolvePorts() {
+  const runtime = readRuntimeEnv();
+  return {
+    proxyPort: Number(process.env.PROXY_PORT || runtime?.proxyPort || config.proxyPort),
+    orchestratorPort: Number(process.env.ORCHESTRATOR_PORT || runtime?.orchestratorPort || config.orchestratorPort),
+  };
+}
 
-async function createPassport(prompt, extra = {}) {
+async function createPassport(ports, prompt, extra = {}) {
   const response = await request(`http://127.0.0.1:${ports.orchestratorPort}/intent-passports`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ prompt, ...extra }),
   });
 
-  return response.body.json();
+  const body = await response.body.json();
+  if (response.statusCode >= 400 || !body?.token) {
+    throw new Error(`Intent passport request failed on port ${ports.orchestratorPort}: ${JSON.stringify(body)}`);
+  }
+
+  return body;
 }
 
-async function mcpCall(token, name, args = {}) {
+async function mcpCall(ports, token, name, args = {}) {
   const response = await request(`http://127.0.0.1:${ports.proxyPort}/mcp`, {
     method: "POST",
     headers: {
@@ -40,12 +47,28 @@ async function mcpCall(token, name, args = {}) {
   };
 }
 
+async function verifyStack(ports) {
+  const proxyHealth = await request(`http://127.0.0.1:${ports.proxyPort}/health`);
+  const proxyBody = await proxyHealth.body.json();
+  if (proxyHealth.statusCode >= 400 || proxyBody?.status !== "ok") {
+    throw new Error(`No semantic proxy available on port ${ports.proxyPort}`);
+  }
+
+  const orchestratorCatalog = await request(`http://127.0.0.1:${ports.orchestratorPort}/catalog`);
+  const catalogBody = await orchestratorCatalog.body.json();
+  if (orchestratorCatalog.statusCode >= 400 || !Array.isArray(catalogBody?.datasets)) {
+    throw new Error(`No orchestrator available on port ${ports.orchestratorPort}`);
+  }
+}
+
 async function pollApprovals() {
+  const ports = resolvePorts();
   const response = await request(`http://127.0.0.1:${ports.proxyPort}/approvals`);
   return response.body.json();
 }
 
 async function decideApproval(id, approved) {
+  const ports = resolvePorts();
   await request(`http://127.0.0.1:${ports.proxyPort}/approvals/${id}/decision`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -55,10 +78,14 @@ async function decideApproval(id, approved) {
 
 export async function run() {
   const scenario = process.argv[2] || "allow";
+  const ports = resolvePorts();
+
+  console.log(`Using proxy ${ports.proxyPort} and orchestrator ${ports.orchestratorPort}`);
+  await verifyStack(ports);
 
   if (scenario === "allow") {
-    const passport = await createPassport("Generate a revenue report for sales-q1.");
-    const result = await mcpCall(passport.token, "generate_report", {
+    const passport = await createPassport(ports, "Generate a revenue report for sales-q1.");
+    const result = await mcpCall(ports, passport.token, "generate_report", {
       datasetId: "sales-q1",
       objective: "Summarize the strongest regional revenue performance.",
     });
@@ -67,8 +94,8 @@ export async function run() {
   }
 
   if (scenario === "block") {
-    const passport = await createPassport("Generate a revenue report for sales-q1.");
-    const result = await mcpCall(passport.token, "delete_dataset", {
+    const passport = await createPassport(ports, "Generate a revenue report for sales-q1.");
+    const result = await mcpCall(ports, passport.token, "delete_dataset", {
       datasetId: "sales-q2",
       confirmation: "DELETE",
     });
@@ -77,7 +104,7 @@ export async function run() {
   }
 
   if (scenario === "approve") {
-    const passport = await createPassport("Generate a revenue report for sales-q1.", {
+    const passport = await createPassport(ports, "Generate a revenue report for sales-q1.", {
       toolScopes: [
         "list_datasets",
         "get_dataset_overview",
@@ -86,7 +113,7 @@ export async function run() {
         "export_customer_emails",
       ],
     });
-    const pendingCall = mcpCall(passport.token, "export_customer_emails", {
+    const pendingCall = mcpCall(ports, passport.token, "export_customer_emails", {
       datasetId: "sales-q1",
     });
     await new Promise((resolve) => setTimeout(resolve, 300));

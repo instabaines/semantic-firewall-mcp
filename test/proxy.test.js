@@ -150,4 +150,43 @@ describe("semantic proxy", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json().result.content[0].text).toContain("Forwarded");
   });
+
+  it("exposes the audience, sender thumbprint, and last request security state", async () => {
+    await boot();
+
+    const response = await proxy.inject({
+      method: "POST",
+      url: "/mcp",
+      headers: {
+        authorization: `Bearer ${passport({
+          toolScopes: ["generate_report"],
+          resources: ["demo://datasets/sales-q1"],
+        })}`,
+      },
+      payload: {
+        jsonrpc: "2.0",
+        id: 4,
+        method: "tools/call",
+        params: {
+          name: "generate_report",
+          arguments: { datasetId: "sales-q1", objective: "Summarize revenue." },
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const state = await proxy.inject({
+      method: "GET",
+      url: "/api/state",
+    });
+
+    expect(state.statusCode).toBe(200);
+    expect(state.json().security).toEqual({
+      currentAudience: config.protectedResourceAudience,
+      senderConstraintThumbprint: config.senderConstraint.thumbprint,
+      lastRequestModelBacked: false,
+      lastRequestDpopVerified: false,
+    });
+  });
 });

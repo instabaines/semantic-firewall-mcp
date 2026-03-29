@@ -26,10 +26,36 @@
       </section>
 
       <section class="grid">
+        <article class="card security-card">
+          <div class="section-head compact">
+            <h2>Security State</h2>
+            <p id="runtime-meta">Awaiting runtime metadata</p>
+          </div>
+          <div class="stack security-stack">
+            <div class="item">
+              <div class="meta">Current audience</div>
+              <strong id="security-audience">Loading…</strong>
+            </div>
+            <div class="item">
+              <div class="meta">Sender-constraint thumbprint</div>
+              <strong id="security-thumbprint">Loading…</strong>
+            </div>
+            <div class="security-badges">
+              <div class="item badge-item">
+                <div class="meta">Last request model-backed</div>
+                <strong id="security-model-backed" class="security-badge">Unknown</strong>
+              </div>
+              <div class="item badge-item">
+                <div class="meta">Last request DPoP-verified</div>
+                <strong id="security-dpop-verified" class="security-badge">Unknown</strong>
+              </div>
+            </div>
+          </div>
+        </article>
+
         <article class="card">
           <div class="section-head compact">
             <h2>Pending Approvals</h2>
-            <p id="runtime-meta">Awaiting runtime metadata</p>
           </div>
           <div id="approvals" class="stack"></div>
         </article>

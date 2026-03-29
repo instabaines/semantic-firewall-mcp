@@ -13,6 +13,7 @@ import {
   saveReport,
 } from "./demo-db.js";
 import { eventBus } from "../dashboard/event-bus.js";
+import { verifyProtectedResourceRequest } from "./auth.js";
 
 function renderReportMarkdown(dataset, overview, objective, rows) {
   const topRegions = [...rows]
@@ -188,6 +189,26 @@ export function buildProtectedServer(config) {
   const app = Fastify({ logger: true });
 
   app.post("/mcp", async (request, reply) => {
+    let authContext;
+    try {
+      authContext = verifyProtectedResourceRequest({ config, request });
+    } catch (error) {
+      return reply.code(401).send({
+        jsonrpc: "2.0",
+        id: request.body?.id ?? null,
+        error: {
+          code: 401,
+          message: error.message,
+        },
+      });
+    }
+
+    eventBus.publish("resource.auth_verified", {
+      audience: authContext.audience,
+      senderConstraintThumbprint: authContext.senderConstraintThumbprint,
+      dpopVerified: authContext.dpopVerified,
+    });
+
     const server = buildMcpServer(config);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

@@ -103,6 +103,10 @@ h1 {
   grid-column: span 12;
 }
 
+.security-card {
+  grid-column: span 4;
+}
+
 .section-head {
   display: flex;
   justify-content: space-between;
@@ -122,6 +126,46 @@ h1 {
 .stack {
   display: grid;
   gap: 12px;
+}
+
+.security-stack {
+  align-content: start;
+}
+
+.security-badges {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.badge-item {
+  min-height: 112px;
+}
+
+.security-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.security-badge.ok {
+  color: var(--ok);
+  border-color: rgba(125, 211, 111, 0.24);
+  background: rgba(125, 211, 111, 0.08);
+}
+
+.security-badge.danger {
+  color: var(--danger);
+  border-color: rgba(255, 84, 104, 0.24);
+  background: rgba(255, 84, 104, 0.08);
+}
+
+.security-badge.muted {
+  color: var(--muted);
 }
 
 .item {
@@ -275,5 +319,9 @@ pre {
   .card,
   .timeline-card {
     grid-column: span 12;
+  }
+
+  .security-badges {
+    grid-template-columns: 1fr;
   }
 }
