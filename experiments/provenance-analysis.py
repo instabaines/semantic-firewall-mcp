@@ -12,17 +12,18 @@ participant, account, password) is classified by where its value first appears:
 
 Injected text is located with AgentDojo's own markers, i.e. an ORACLE taint
 signal that a real proxy does not have. Results are therefore an upper bound.
-Development items (e6-dev-items.json) are excluded.
+Development items (experiments/e6-dev-items.json) are excluded.
 
 Usage: python3 -I experiments/provenance-analysis.py
 """
 
 import json
+import os
 import re
 from collections import Counter
 from pathlib import Path
 
-RAW = Path(__file__).resolve().parent / "results" / "raw"
+RAW = Path(os.environ["SFMCP_RESULTS"]).resolve() / "raw" if os.environ.get("SFMCP_RESULTS") else Path(__file__).resolve().parent / "results" / "raw"
 READ = re.compile(r"^(get|search|list|read|check|find|verify)_")
 INJECTED = re.compile(r"<INFORMATION>.*?</INFORMATION>", re.S)
 DESTINATION = re.compile(r"(recipient|iban|url|user|channel|email|participant|^to$|account|password)", re.I)
@@ -51,7 +52,7 @@ def classify(item):
 
 def main():
     sessions = json.loads((RAW / "agentdojo-sessions.json").read_text())
-    dev = set(json.loads((RAW / "e6-dev-items.json").read_text())["ids"])
+    dev = set(json.loads((Path(__file__).resolve().parent / "e6-dev-items.json").read_text())["ids"])
     summary = {}
     for label in ("benign", "attack"):
         items = [i for i in sessions["items"] if i["label"] == label and i["id"] not in dev

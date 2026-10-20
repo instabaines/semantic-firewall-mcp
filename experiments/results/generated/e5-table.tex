@@ -4,20 +4,20 @@
 Defense & Model & ASR (\%) & ASR$_{\mathrm{sem}}$ (\%) & Benign pass (\%) \\
 \midrule
 Ours: deterministic layers only & -- & 61.5 {\scriptsize[45.9, 75.1]} & 100.0 {\scriptsize[86.2, 100.0]} & 97.1 {\scriptsize[85.1, 99.5]} \\
-Progent-LLM & Qwen2.5 3B & 2.6 {\scriptsize[0.9, 7.3]} & 0.0 {\scriptsize[0.0, 5.1]} & 11.8 {\scriptsize[6.9, 19.4]} \\
-Progent-LLM & Llama 3.1 8B & 30.8 {\scriptsize[23.1, 39.6]} & 33.3 {\scriptsize[23.5, 44.8]} & 35.3 {\scriptsize[26.7, 44.9]} \\
-Progent-LLM & Gemma 4 E4B & 2.6 {\scriptsize[0.9, 7.3]} & 0.0 {\scriptsize[0.0, 5.1]} & 17.6 {\scriptsize[11.5, 26.2]} \\
+Progent-LLM & Qwen2.5 3B & 2.6 {\scriptsize[0.5, 13.2]} & 0.0 {\scriptsize[0.0, 13.8]} & 11.8 {\scriptsize[4.7, 26.6]} \\
+Progent-LLM & Llama 3.1 8B & 30.8 {\scriptsize[18.6, 46.4]} & 33.3 {\scriptsize[18.0, 53.3]} & 35.3 {\scriptsize[21.5, 52.1]} \\
+Progent-LLM & Gemma 4 E4B & 2.6 {\scriptsize[0.5, 13.2]} & 0.0 {\scriptsize[0.0, 13.8]} & 17.6 {\scriptsize[8.3, 33.5]} \\
 AlignmentCheck alone & Qwen2.5 3B & 20.5 {\scriptsize[10.8, 35.5]} & 29.2 {\scriptsize[14.9, 49.2]} & 76.5 {\scriptsize[60.0, 87.6]} \\
 AlignmentCheck alone & Llama 3.1 8B & 33.3 {\scriptsize[20.6, 49.0]} & 41.7 {\scriptsize[24.5, 61.2]} & 97.1 {\scriptsize[85.1, 99.5]} \\
 AlignmentCheck alone & Gemma 4 E4B & 15.4 {\scriptsize[7.2, 29.7]} & 20.8 {\scriptsize[9.2, 40.5]} & 100.0 {\scriptsize[89.8, 100.0]} \\
 Ours (det.) + AlignmentCheck & Qwen2.5 3B & 17.9 {\scriptsize[9.0, 32.7]} & 29.2 {\scriptsize[14.9, 49.2]} & 76.5 {\scriptsize[60.0, 87.6]} \\
 Ours (det.) + AlignmentCheck & Llama 3.1 8B & 25.6 {\scriptsize[14.6, 41.1]} & 41.7 {\scriptsize[24.5, 61.2]} & 94.1 {\scriptsize[80.9, 98.4]} \\
 Ours (det.) + AlignmentCheck & Gemma 4 E4B & 12.8 {\scriptsize[5.6, 26.7]} & 20.8 {\scriptsize[9.2, 40.5]} & 97.1 {\scriptsize[85.1, 99.5]} \\
-Ours: det. + hardened model & Qwen2.5 3B & 2.6 {\scriptsize[0.9, 7.3]} & 4.2 {\scriptsize[1.4, 11.5]} & 85.3 {\scriptsize[77.1, 90.9]} \\
-Ours: det. + hardened model & Llama 3.1 8B & 0.0 {\scriptsize[0.0, 3.2]} & 0.0 {\scriptsize[0.0, 5.1]} & 88.2 {\scriptsize[80.6, 93.1]} \\
-Ours: det. + hardened model & Gemma 4 E4B & 0.0 {\scriptsize[0.0, 3.2]} & 0.0 {\scriptsize[0.0, 5.1]} & 85.3 {\scriptsize[77.1, 90.9]} \\
-Ours: det. + ensemble & Qwen2.5 3B & 0.0 {\scriptsize[0.0, 3.2]} & 0.0 {\scriptsize[0.0, 5.1]} & 79.4 {\scriptsize[70.6, 86.1]} \\
-Ours: det. + ensemble & Llama 3.1 8B & 0.0 {\scriptsize[0.0, 3.2]} & 0.0 {\scriptsize[0.0, 5.1]} & 82.4 {\scriptsize[73.8, 88.5]} \\
-Ours: det. + ensemble & Gemma 4 E4B & 0.0 {\scriptsize[0.0, 3.2]} & 0.0 {\scriptsize[0.0, 5.1]} & 79.4 {\scriptsize[70.6, 86.1]} \\
+Ours: det. + hardened model & Qwen2.5 3B & 2.6 {\scriptsize[0.5, 13.2]} & 4.2 {\scriptsize[0.7, 20.2]} & 85.3 {\scriptsize[69.9, 93.6]} \\
+Ours: det. + hardened model & Llama 3.1 8B & 0.0 {\scriptsize[0.0, 9.0]} & 0.0 {\scriptsize[0.0, 13.8]} & 88.2 {\scriptsize[73.4, 95.3]} \\
+Ours: det. + hardened model & Gemma 4 E4B & 0.0 {\scriptsize[0.0, 9.0]} & 0.0 {\scriptsize[0.0, 13.8]} & 85.3 {\scriptsize[69.9, 93.6]} \\
+Ours: det. + ensemble & Qwen2.5 3B & 0.0 {\scriptsize[0.0, 9.0]} & 0.0 {\scriptsize[0.0, 13.8]} & 79.4 {\scriptsize[63.2, 89.7]} \\
+Ours: det. + ensemble & Llama 3.1 8B & 0.0 {\scriptsize[0.0, 9.0]} & 0.0 {\scriptsize[0.0, 13.8]} & 82.4 {\scriptsize[66.5, 91.7]} \\
+Ours: det. + ensemble & Gemma 4 E4B & 0.0 {\scriptsize[0.0, 9.0]} & 0.0 {\scriptsize[0.0, 13.8]} & 79.4 {\scriptsize[63.2, 89.7]} \\
 \bottomrule
 \end{tabular}

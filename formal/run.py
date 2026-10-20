@@ -96,7 +96,7 @@ def main():
     timeout = int(os.environ.get("TAMARIN_TIMEOUT", "600"))
     only = sys.argv[1:]
     out = {}
-    results_file = HERE / "results.json"
+    results_file = Path(os.environ["SFMCP_RESULTS"]).resolve() / "formal-results.json" if os.environ.get("SFMCP_RESULTS") else HERE / "results.json"
     if results_file.exists():
         out = json.loads(results_file.read_text())
     for name, (flags, _) in VARIANTS.items():

@@ -1,10 +1,18 @@
 # Security Findings and Remediations (v1.0.0 → v1.1.0)
 
 This document records the vulnerabilities found in the original reference
-implementation (commit `ce51701`, v1.0.0), the change that fixes each one, and how
-the fix is verified. Every finding marked *confirmed* was exploited end to end
-against a running v1.0.0 stack by `experiments/run-protocol-attacks.js` (E2); the
-same attack fails against v1.1.0. Raw evidence: `experiments/results/raw/e2-*.json`.
+implementation (v1.0.0, kept for comparison in `experiments/legacy/v1.0/`), the
+change that fixes each one, and how the fix is verified. Every finding marked
+*confirmed* was exploited end to end against a running v1.0.0 stack by
+`experiments/run-protocol-attacks.js` (E2, five trials per exploit); the same attack
+fails against v1.1.0. Raw evidence: `experiments/results/raw/e2-*.json`.
+
+**Summary.** Ten protocol-level flaws (F1–F9 and F15) break the guaranteed
+properties. Nine were exploited end to end (X1, X2, X4–X7, X9, X10, X12); F9 (X11)
+is in browser code and was confirmed by inspection. Nine were found by attacking
+v1.0.0; F15 was found by the Tamarin model (`formal/`) in the first revision of
+v1.1.0, and it is also exploitable in v1.0.0. F10–F14 affect the inspector's
+judgement or privacy rather than the protocol guarantees.
 
 Threat model in one line: the **agent is untrusted** (it may be steered by prompt
 injection in data it reads). It holds a legitimately issued passport and can send
@@ -27,12 +35,31 @@ credential, the approver token, or any private key.
 | F12 | Resources smuggled under undeclared argument names | Medium | by inspection | Per-tool resource-argument registry plus scan of all URI-shaped values | tests |
 | F13 | Model confidence on a 0–100 scale treated as a probability (every verdict exceeds every threshold) | Low | observed (qwen2.5) | Verdict normalization | tests |
 | F14 | Thinking models return empty output under a token cap | Low | observed (gemma4) | `think: false` in model requests | E1 |
+| F15 | Proof of possession not bound to the request body: a proof observed on the proxy–server link can be presented first with a different in-scope call, which then skips inspection and approval | High | confirmed (X12); found by the Tamarin model | Proof carries `bdh`, the SHA-256 of the exact request body; the server verifies it against the raw bytes received | Tamarin (P5, P7), E2 X12, `security-regressions.test.js` |
 
 Controls (expected to fail on both versions, and do): X3 unsigned `alg=none`
 passport; X8 stolen passport sent directly to the resource server without a
 DPoP proof.
 
+## Formal verification
+
+`formal/semantic_firewall.spthy` models issuance, mediation, approval and
+forwarding under a Dolev–Yao adversary that receives every passport. For v1.1.0 it
+verifies authentic intent (P1), scope and resource confinement (P2/P3), sender
+constraint and replay freedom (P5), and consent integrity (P7). Variants that
+reinstate F2, F6, F8 (replay cache, server re-check) or F15 are each falsified on
+exactly the properties those flaws break; results are in `formal/results.json`.
+Parsing and error handling (complete mediation, fail-safe defaults) are outside a
+symbolic model and are covered by the regression tests and E2.
+
 ## Residual risks (not fixed, documented)
+
+- **Multi-step sessions.** On AgentDojo-derived sessions (E6) the inspector stops
+  most hijacked calls but holds many legitimate intermediate steps whose arguments
+  come from earlier results. Passing the session history (`INSPECTOR_HISTORY`,
+  default 6) reduces this substantially for capable models; tracking argument
+  provenance at the proxy is the next step (`experiments/provenance-analysis.py`
+  gives an upper bound).
 
 - **Inspector judgement is probabilistic.** E1 reports both attack success and the
   benign-call cost; small local models over-flag legitimate supporting calls.

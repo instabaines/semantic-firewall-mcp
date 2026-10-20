@@ -23,3 +23,7 @@ paper/
 formal/build/
 experiments/results/logs/*.sh
 experiments/results/logs/*.done
+experiments/legacy/v1.0/node_modules
+experiments/legacy/v1.0/.runtime/
+experiments/legacy/v1.0/data/
+experiments/results-reproduced/

@@ -10,6 +10,7 @@ import { request } from "undici";
 import { startStack } from "./lib/stack.js";
 import { issueIntentPassport } from "../src/protocol/contextual-passport.js";
 import { createDpopProof } from "../src/protocol/sender-constrained.js";
+import { RAW } from "./lib/paths.js";
 
 const n = Number(process.argv[process.argv.indexOf("--n") + 1]) || 300;
 const WARMUP = 30;
@@ -61,7 +62,7 @@ async function main() {
   }
 
   const out = { n, warmup: WARMUP, node: process.version, cpu: `${os.cpus()[0]?.model} x${os.cpus().length}`, results };
-  const dir = path.join(import.meta.dirname, "results", "raw");
+  const dir = RAW;
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, "e4-overhead.json"), JSON.stringify(out, null, 2));
   for (const [name, r] of Object.entries(results)) {

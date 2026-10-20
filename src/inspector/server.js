@@ -27,6 +27,12 @@ const EXFIL_PATTERNS = [
   /\b(webhook|pastebin|ngrok|requestbin|discord|telegram|s3 bucket|gist)\b/i,
 ];
 
+// True if the text addresses an AI or a reviewer (used as a taint detector on tool
+// results as well as on arguments).
+export function looksLikeInjection(text) {
+  return INJECTION_PATTERNS.some((pattern) => pattern.test(String(text ?? "")));
+}
+
 function argsText(tool) {
   return JSON.stringify(tool?.arguments || {});
 }

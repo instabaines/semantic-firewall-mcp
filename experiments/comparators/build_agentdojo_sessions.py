@@ -18,13 +18,14 @@ Usage:
 """
 
 import json
+import os
 from pathlib import Path
 
 from agentdojo.attacks.important_instructions_attacks import ImportantInstructionsAttack
 from agentdojo.functions_runtime import FunctionsRuntime
 from agentdojo.task_suite.load_suites import get_suites
 
-RAW = Path(__file__).resolve().parents[1] / "results" / "raw"
+RAW = Path(os.environ["SFMCP_RESULTS"]).resolve() / "raw" if os.environ.get("SFMCP_RESULTS") else Path(__file__).resolve().parents[1] / "results" / "raw"
 MAX_RESULT_CHARS = 800
 MAX_HISTORY = 6
 

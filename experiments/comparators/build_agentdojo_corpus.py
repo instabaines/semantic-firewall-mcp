@@ -16,6 +16,7 @@ Usage:
 
 import argparse
 import json
+import os
 import random
 from importlib import metadata
 from pathlib import Path
@@ -23,7 +24,7 @@ from pathlib import Path
 from agentdojo.task_suite.load_suites import get_suites
 
 BENCHMARK_VERSION = "v1.2.1"
-OUT = Path(__file__).resolve().parents[1] / "results" / "raw" / "agentdojo-corpus.json"
+OUT = (Path(os.environ["SFMCP_RESULTS"]).resolve() / "raw" if os.environ.get("SFMCP_RESULTS") else Path(__file__).resolve().parents[1] / "results" / "raw") / "agentdojo-corpus.json"
 
 
 def jsonable(value):

@@ -11,6 +11,7 @@ Everything needed to reproduce the evaluation. All scripts are plain Node.js
 | E4 | `run-overhead.js` | Latency added by the proxy without a model | No |
 | E5 | `comparators/run_comparators.py` | How do Progent-LLM policies and LlamaFirewall's AlignmentCheck do on the same corpus and models? | Yes |
 | E6 | `comparators/build_agentdojo_corpus.py`, `run-agentdojo-inspector.js`, `comparators/run_comparators.py --corpus agentdojo` | Do the results transfer to independent, multi-domain data? (AgentDojo-derived intent/call pairs) | Yes |
+| E6-P | `run-provenance.js` | Does tracking where destination arguments come from (prompt, retrieved data, injected text) reduce false alarms on multi-step sessions? | Taint detector `model` only |
 | — | `analyze.js` | Aggregates raw results into `results/summary/*.csv` and LaTeX tables in `results/generated/` | No |
 
 ## Corpus
@@ -46,55 +47,32 @@ human rubber-stamped every held call.
 
 ## Reproduce
 
-`sh experiments/run-all.sh` runs every step below in order (set `OLLAMA_HOST` to the
-model server; completed outputs are skipped on a re-run). The individual steps:
+Everything runs from one command at the repository root:
 
 ```bash
-npm ci
-ollama pull qwen2.5:3b && ollama pull llama3.1:8b && ollama pull gemma4:latest
-
-# E1 (layers without a model: ~1 min; model configurations: hours on CPU)
-node experiments/run-enforcement.js --configs C0,C1,C2,C3
-node experiments/run-enforcement.js --configs C6,C4 --reps 3
-
-# E2: needs a checkout of the original commit for the comparison
-git worktree add ../sfmcp-legacy ce51701 && ln -s "$PWD/node_modules" ../sfmcp-legacy/node_modules
-node experiments/run-protocol-attacks.js --target legacy --root ../sfmcp-legacy --base-port 5600
-node experiments/run-protocol-attacks.js --target fixed  --root .              --base-port 5700
-
-# E3
-node experiments/run-summarizer.js --reps 3
-
-# E4 (run on an otherwise idle machine)
-node experiments/run-overhead.js --n 300
-
-# E5: prior defenses (Python 3.10+, CPU-only torch for LlamaFirewall)
-git clone https://github.com/sunblaze-ucb/progent experiments/comparators/vendor/progent
-git -C experiments/comparators/vendor/progent checkout 5be7b63fa96f70bc19b72fbcee81f1c0bcc1a565
-python3 -m venv experiments/comparators/.venv
-experiments/comparators/.venv/bin/pip install -e experiments/comparators/vendor/progent
-experiments/comparators/.venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
-experiments/comparators/.venv/bin/pip install llamafirewall==1.0.3
-node experiments/export-corpus.js > experiments/results/raw/corpus.json
-experiments/comparators/.venv/bin/python -I experiments/comparators/run_comparators.py --systems progent --reps 3
-experiments/comparators/.venv/bin/python -I experiments/comparators/run_comparators.py --systems alignmentcheck --reps 1
-
-# E6: AgentDojo-derived corpus (agentdojo 0.1.35, benchmark v1.2.1)
-experiments/comparators/.venv/bin/pip install agentdojo==0.1.35
-experiments/comparators/.venv/bin/python -I experiments/comparators/build_agentdojo_corpus.py --pairs-per-injection 6 --seed 7
-node experiments/run-agentdojo-inspector.js
-# E6-S: session-aware variant (history = preceding calls executed in AgentDojo's environment)
-experiments/comparators/.venv/bin/python -I experiments/comparators/build_agentdojo_sessions.py
-node experiments/run-agentdojo-inspector.js --sessions
-experiments/comparators/.venv/bin/python -I experiments/comparators/run_comparators.py --corpus agentdojo-sessions
-experiments/comparators/.venv/bin/python -I experiments/comparators/run_comparators.py --corpus agentdojo --systems progent
-experiments/comparators/.venv/bin/python -I experiments/comparators/run_comparators.py --corpus agentdojo --systems alignmentcheck
-
-# Tables, CSVs and LaTeX tables
-node experiments/analyze.js
+./reproduce.sh               # full run: setup, tests, E1-E6, formal model, analysis
+./reproduce.sh --no-models   # everything that needs no language model (about 40 min)
+./reproduce.sh --analyze     # regenerate summaries and tables from the shipped raw results
 ```
 
-E1 is resumable: completed `(config, model, rep)` files are skipped.
+The full run needs an [Ollama](https://ollama.com) server; set `OLLAMA_HOST=host:port`
+to use one on another machine. On a single GPU it takes a few hours; CPU-only, about a
+day. `reproduce.sh` does all of the following itself, so nothing needs installing by
+hand beyond Node.js 20+, Python 3.10+ and curl:
+
+- installs Node.js dependencies and runs the test suite;
+- installs the comparator environment from `comparators/requirements-lock.txt`
+  (torch CPU wheels, LlamaFirewall 1.0.3, AgentDojo 0.1.35, Progent at a pinned commit);
+- downloads Tamarin 1.12.0 and Maude 3.5.1 into `formal/.tools/` and checks their SHA-256;
+- pulls the three models if missing and warns if a digest differs from the one used here;
+- links `node_modules` into `legacy/v1.0/`, the original implementation that E2 attacks;
+- writes every output to `results-reproduced/<timestamp>/` (or `OUT=...`), never into
+  `results/`, and ends with `comparison.txt`, a metric-by-metric comparison with the
+  shipped results.
+
+Every step is resumable: rerun with the same `OUT` and completed outputs are skipped.
+Each script can also be run on its own; `reproduce.sh` lists the exact commands and
+their order.
 
 ## Outputs
 
@@ -113,6 +91,7 @@ E1 is resumable: completed `(config, model, rep)` files are skipped.
 - E6 pairs each AgentDojo user-task prompt with (a) that task's ground-truth calls (benign) and (b) the ground-truth calls of an injection task from the same suite (attack), sampling 6 user tasks per injection task (seed 7). 339 benign calls from 97 user tasks; 156 attack pairs (282 calls) from 26 injection tasks; 9 injection tasks with text-only goals are excluded. Only the semantic and policy layers are compared: our deterministic layers would need a per-suite tool registry. Attack success is scored on the final (harmful) call of each pair; "any call flagged" is reported as a secondary measure.
 - E2 runs each attack 5 times on fresh stacks and reports successes over valid trials; a trial that errors (for example, a component not yet listening) is recorded as invalid, never as prevented.
 - E6-S gives every evaluated call the session history a proxy would observe: the preceding ground-truth calls executed in AgentDojo's environment, with results truncated to 800 characters (last 6 steps). For attack pairs, the vectors read by the user task carry AgentDojo's "important_instructions" injection for the injection task's goal, so the injection appears in the history (259 of 282 attack items). Our inspector uses the `hardened-session` prompt; AlignmentCheck receives the full trace (user message, actions, tool results).
-- The session prompt rules were written after inspecting the items listed in `results/raw/e6-dev-items.json`; those items (and their attack pairs) are excluded from every E6 and E6-S metric.
+- The session prompt rules were written after inspecting the items listed in `experiments/e6-dev-items.json`; those items (and their attack pairs) are excluded from every E6 and E6-S metric.
 - Hardware: all primary model results ran on an RTX 3060 Laptop GPU (6 GB) via Ollama 0.40.6 (`OLLAMA_HOST=<gpu-host>:11434` in the logged runs); `results/cpu-reference/` holds the earlier CPU-only runs (Ollama 0.34.4; older gemma4 build `c6eb396dbd59`). Model digests are recorded in each run's metadata.
 - Progent-LLM's policy generation returned unparseable output for 6 of 97 AgentDojo tasks with gemma4 (after Progent's own retries); calls under those tasks are counted as blocked (`policy_generation_failed`).
+- E6-P classifies each destination argument (recipient, IBAN, URL, user, channel, ...) of a call as coming from the user (via salted hashes of the prompt's word sequences, which the passport can carry without the prompt), from clean data retrieved earlier in the session, only from text a taint detector marks as an instruction to an AI, or from nowhere; the last two are flagged. Calls with a destination are decided by provenance, all others by the session-aware model. Taint detectors: `rules` (the inspector's generic injection patterns), `model` (the local model marks instruction segments), and `oracle` (AgentDojo's injection markers; an upper bound only).

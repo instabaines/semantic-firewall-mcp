@@ -25,7 +25,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "experiments" / "results" / "raw"
+RAW = Path(os.environ["SFMCP_RESULTS"]).resolve() / "raw" if os.environ.get("SFMCP_RESULTS") else ROOT / "experiments" / "results" / "raw"
 OLLAMA = os.environ.get("OLLAMA_BASE", "http://127.0.0.1:11434")
 
 # Progent prints its configured model at import; we name local models with the

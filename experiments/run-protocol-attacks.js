@@ -17,9 +17,10 @@ import { spawn, execFileSync } from "node:child_process";
 import Database from "better-sqlite3";
 import jwt from "jsonwebtoken";
 import { request } from "undici";
+import { RAW } from "./lib/paths.js";
 
 const DEAD_MODEL_URL = "http://127.0.0.1:9/api/generate"; // nothing listens on the discard port
-const RESULTS_DIR = path.join(import.meta.dirname, "results", "raw");
+const RESULTS_DIR = RAW;
 
 function parseArgs(argv) {
   const args = { target: "fixed", root: process.cwd(), basePort: 5600, trials: 5 };

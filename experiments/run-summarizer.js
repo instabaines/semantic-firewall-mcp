@@ -8,6 +8,7 @@ import path from "node:path";
 import { config as baseConfig } from "../src/runtime/config.js";
 import { getDb } from "../src/protected-resource/demo-db.js";
 import { summarizeIntent } from "../src/orchestrator/semantic-summary.js";
+import { RAW } from "./lib/paths.js";
 
 const Q1 = "demo://datasets/sales-q1";
 const Q2 = "demo://datasets/sales-q2";
@@ -94,7 +95,7 @@ async function main() {
     }
   }
 
-  const outDir = path.join(import.meta.dirname, "results", "raw");
+  const outDir = RAW;
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, "e3-meta.json"), JSON.stringify({ ranAt: new Date().toISOString(), ollamaUrl: config.ollamaUrl, args }, null, 2));
   fs.writeFileSync(path.join(outDir, "e3-summarizer.jsonl"), `${rows.map((row) => JSON.stringify(row)).join("\n")}\n`);

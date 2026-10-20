@@ -118,7 +118,18 @@ Aggregated tables are in `experiments/results/summary/`.
 - The inspector closes most of that gap, at a measurable cost in benign calls held or blocked; per-model numbers are in `experiments/results/summary/e1-metrics.csv`.
 - On multi-step sessions derived from AgentDojo, attack detection transfers (96–100%), but small judges hold many legitimate intermediate steps. Passing the session history to the judge halves those false alarms for the strongest model tested (`experiments/results/summary/e6-agentdojo.csv`).
 
-To rerun everything: `OLLAMA_HOST=<host>:11434 sh experiments/run-all.sh` (prerequisites in [`experiments/README.md`](experiments/README.md)).
+## Reproducing the evaluation
+
+```bash
+./reproduce.sh               # everything: setup, tests, all experiments, formal proofs, analysis
+./reproduce.sh --no-models   # everything that needs no language model
+./reproduce.sh --analyze     # regenerate all tables from the shipped raw results (seconds)
+```
+
+The script installs and verifies every dependency itself (Node.js 20+, Python 3.10+
+and curl are the only prerequisites), writes to a fresh folder, and finishes with a
+comparison against the shipped results. The full run needs an Ollama server, local or
+remote via `OLLAMA_HOST`. Details: [`experiments/README.md`](experiments/README.md).
 
 ## Tests
 
@@ -126,7 +137,7 @@ To rerun everything: `OLLAMA_HOST=<host>:11434 sh experiments/run-all.sh` (prere
 npm test
 ```
 
-40 tests cover the allow, deny, and approval paths, sender-constrained tokens, and a
+42 tests cover the allow, deny, and approval paths, sender-constrained tokens, and a
 regression test for each finding in `docs/SECURITY_FINDINGS.md`.
 
 ## Project structure
@@ -143,7 +154,9 @@ src/
 public/               dashboard UI
 test/                 vitest suites
 experiments/          corpus, harnesses, analysis, raw and summarized results
+  legacy/v1.0/        original (vulnerable) implementation, attacked by E2
 formal/               Tamarin model of the protocol and the script that proves it
+reproduce.sh          one-command setup and full evaluation
 docs/                 flow diagram (TikZ source; rebuild with docs/build-figures.sh), security findings
 ```
 

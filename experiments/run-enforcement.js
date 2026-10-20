@@ -16,13 +16,14 @@ import { execSync } from "node:child_process";
 import { request } from "undici";
 import { CASES, INTENTS } from "./scenarios.js";
 import { startStack } from "./lib/stack.js";
+import { RAW } from "./lib/paths.js";
 import { config as baseConfig } from "../src/runtime/config.js";
 import { issueIntentPassport } from "../src/protocol/contextual-passport.js";
 import { deriveToolScopes, fallbackSummary } from "../src/orchestrator/semantic-summary.js";
 import { listDatasets, resetDb } from "../src/protected-resource/demo-db.js";
 import { TOOL_POLICY } from "../src/semantic-proxy/policy-engine.js";
 
-const RAW_DIR = path.join(import.meta.dirname, "results", "raw");
+const RAW_DIR = RAW;
 const ALL_TOOLS = Object.keys(TOOL_POLICY);
 
 // Layers enabled per configuration. C5 (hardened model alone) is derived from the

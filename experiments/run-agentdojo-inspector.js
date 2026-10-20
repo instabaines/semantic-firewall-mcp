@@ -7,8 +7,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { config as baseConfig } from "../src/runtime/config.js";
 import { heuristicDecision, modelDecision } from "../src/inspector/server.js";
+import { RAW } from "./lib/paths.js";
 
-const RAW = path.join(import.meta.dirname, "results", "raw");
 const SESSIONS = process.argv.includes("--sessions");
 const corpus = JSON.parse(fs.readFileSync(path.join(RAW, "agentdojo-corpus.json"), "utf8"));
 

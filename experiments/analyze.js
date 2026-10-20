@@ -11,7 +11,7 @@ import { decideOnVerdict } from "../src/semantic-proxy/server.js";
 const ROOT = path.resolve(import.meta.dirname, "..");
 // Primary results (GPU inference server) by default; RESULTS_DIR=experiments/results/cpu-reference
 // re-analyzes the CPU reference runs into that folder.
-const RESULTS = process.env.RESULTS_DIR ? path.resolve(process.env.RESULTS_DIR) : path.join(ROOT, "experiments", "results");
+const RESULTS = path.resolve(process.env.RESULTS_DIR || process.env.SFMCP_RESULTS || path.join(ROOT, "experiments", "results"));
 const RAW = path.join(RESULTS, "raw");
 const SUMMARY = path.join(RESULTS, "summary");
 const GENERATED = path.join(RESULTS, "generated");
@@ -86,9 +86,20 @@ const ordered = [...groups.keys()].sort((a, b) => {
   return CONFIG_ORDER.indexOf(ca) - CONFIG_ORDER.indexOf(cb) || MODEL_ORDER.indexOf(ma) - MODEL_ORDER.indexOf(mb);
 });
 
-function rate(rows, predicate) {
-  const k = rows.filter(predicate).length;
-  return { k, n: rows.length, p: rows.length ? k / rows.length : 0, ci: wilson(k, rows.length) };
+// Rates use the case (or prompt) as the statistical unit. Repeated runs of a case
+// are not independent samples, so each case contributes its mean outcome across
+// runs, and the interval uses n = number of cases, not number of runs.
+function rate(rows, predicate, unit = (row) => row.id ?? row.prompt) {
+  const byUnit = new Map();
+  for (const row of rows) {
+    const key = unit(row);
+    if (!byUnit.has(key)) byUnit.set(key, []);
+    byUnit.get(key).push(predicate(row) ? 1 : 0);
+  }
+  const means = [...byUnit.values()].map((xs) => xs.reduce((a, b) => a + b, 0) / xs.length);
+  const n = means.length;
+  const p = n ? means.reduce((a, b) => a + b, 0) / n : 0;
+  return { k: p * n, n, runs: rows.length, p, ci: wilson(p * n, n) };
 }
 
 const metrics = [];
@@ -433,7 +444,7 @@ fs.writeFileSync(path.join(SUMMARY, "e5-comparators.csv"), `${[
 // ---------------------------------------------------------------- E6: AgentDojo-derived corpus
 // flagged = held or blocked. Attacks scored on the final (harmful) call of each pair.
 // Items inspected while writing the session prompt are excluded everywhere.
-const devFile = path.join(ROOT, "experiments", "results", "raw", "e6-dev-items.json");
+const devFile = path.join(ROOT, "experiments", "e6-dev-items.json");
 const devIds = new Set(fs.existsSync(devFile) ? JSON.parse(fs.readFileSync(devFile, "utf8")).ids : []);
 const devPairs = new Set([...devIds].filter((id) => id.includes("injection_task")).map((id) => id.split("/").slice(0, 3).join("/")));
 const isDev = (row) => devIds.has(row.id) || (row.pair && devPairs.has(row.pair));
@@ -454,6 +465,25 @@ for (const file of fs.readdirSync(RAW).filter((f) => /^e6s?-(semfw|progent|align
     } else {
       e6.push({ ...row, system: session ? "AlignmentCheck + trace" : "AlignmentCheck", failed: Boolean(row.error) });
     }
+  }
+}
+// E6-P: provenance decides calls that carry a destination argument; the
+// session-aware model judges the rest. One row set per (taint detector, judge model).
+for (const file of fs.readdirSync(RAW).filter((f) => /^e6p-.+\.jsonl$/.test(f))) {
+  const prov = readJsonl(path.join(RAW, file)).filter((row) => !isDev(row));
+  const taint = prov[0]?.system.replace("provenance-", "") || "rules";
+  const judges = e6.filter((r) => r.system === "SemFW (model) + history");
+  for (const model of [...new Set(judges.map((r) => r.model))]) {
+    if (taint === "model" && prov[0]?.model !== model) continue;
+    const verdict = new Map(judges.filter((r) => r.model === model).map((r) => [r.id, r.flagged]));
+    for (const row of prov) {
+      if (!verdict.has(row.id)) continue;
+      const flagged = row.applicable ? row.violation : verdict.get(row.id);
+      e6.push({ ...row, model, system: `Provenance (${taint} taint) + model`, flagged, failed: false });
+    }
+  }
+  if (taint !== "model") {
+    prov.forEach((row) => e6.push({ ...row, model: "none", system: `Provenance only (${taint} taint)`, flagged: row.violation, failed: false }));
   }
 }
 const e6Keys = [...new Set(e6.map((r) => `${r.system}|${r.model}`))];
@@ -599,7 +629,7 @@ ${e6Table.join("\n")}
 }
 
 // ---------------------------------------------------------------- formal results
-const formalFile = path.join(ROOT, "formal", "results.json");
+const formalFile = fs.existsSync(path.join(RESULTS, "formal-results.json")) ? path.join(RESULTS, "formal-results.json") : path.join(ROOT, "formal", "results.json");
 if (fs.existsSync(formalFile)) {
   const formal = JSON.parse(fs.readFileSync(formalFile, "utf8"));
   const LEMMAS = [
@@ -682,7 +712,7 @@ for (const m of e6Metrics) {
   const k = `E6@${E6_KEY[m.system]}@${MODEL_KEY[m.model] || m.model}`;
   macros.push(macro(`${k}@detect`, pct(m.detect.p)), macro(`${k}@detectany`, pct(m.detectAny.p)), macro(`${k}@fpr`, pct(m.fpr.p)), macro(`${k}@friction`, pct(m.taskFriction.p)));
 }
-const adCorpusFile = path.join(ROOT, "experiments", "results", "raw", "agentdojo-corpus.json");
+const adCorpusFile = path.join(RAW, "agentdojo-corpus.json");
 if (fs.existsSync(adCorpusFile)) {
   const ad = JSON.parse(fs.readFileSync(adCorpusFile, "utf8"));
   macros.push(
