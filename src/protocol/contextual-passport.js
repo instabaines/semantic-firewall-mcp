@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import jwt from "jsonwebtoken";
+import { userValuesClaims } from "../inspector/provenance.js";
 
 export const PASSPORT_ALGORITHM = "ES256";
 
@@ -39,6 +40,8 @@ export function issueIntentPassport({
     iat: now,
     nbf: now,
     exp: now + ttlSeconds,
+    // Salted hashes of the prompt's word sequences, for destination provenance.
+    ...(config.provenance && config.provenance !== "off" ? userValuesClaims(prompt) : {}),
   };
 
   const token = jwt.sign(payload, config.passportSigner.privateKeyPem, {

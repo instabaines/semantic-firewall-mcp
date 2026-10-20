@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { generateJsonWithModel } from "./model-client.js";
 import { PROMPT_VARIANTS } from "./prompts.js";
+import { modelTaintedSegments, provenanceDecision, segments } from "./provenance.js";
 
 const DESTRUCTIVE = ["delete", "drop", "destroy", "truncate", "wipe", "shutdown"];
 const READ_INTENT = ["report", "summarize", "summary", "read", "list", "fetch", "query", "analyze", "generate", "review"];
@@ -146,7 +147,53 @@ export function combineVerdicts(heuristic, model) {
   };
 }
 
+// Destination provenance. Decides calls that carry a destination argument and
+// returns null for all others, which go to the usual judges.
+const taintCache = new Map();
+async function taintedByModel(config, text) {
+  const key = `${config.ollamaModel}\u0000${text}`;
+  if (!taintCache.has(key)) {
+    // If the model cannot check a result, treat all of it as tainted: unchecked
+    // text cannot vouch for a destination.
+    const marked = await modelTaintedSegments({ config, text }).catch(() => new Set(segments(text)));
+    taintCache.set(key, marked);
+    if (taintCache.size > 5000) taintCache.delete(taintCache.keys().next().value);
+  }
+  return taintCache.get(key);
+}
+
+export async function provenanceVerdict({ config, payload }) {
+  const { userValues, salt, results } = payload.provenance;
+  if (!Array.isArray(userValues) || typeof salt !== "string" || !Array.isArray(results)) {
+    throw new Error("Malformed provenance block");
+  }
+  const history = results.map((result) => ({ result: String(result) }));
+  const useModel = config.provenance === "model" && config.ollamaModel;
+  let isTainted = looksLikeInjection;
+  if (useModel) {
+    const tainted = new Set();
+    for (const step of history) (await taintedByModel(config, step.result)).forEach((segment) => tainted.add(segment));
+    isTainted = (segment) => tainted.has(segment);
+  }
+  const decision = provenanceDecision({ call: payload.tool, userHashes: userValues, salt, history, isTainted });
+  if (!decision.applicable) return null;
+  return {
+    violation: decision.violation,
+    confidence: decision.violation ? 0.9 : 0.05,
+    reason: decision.violation
+      ? `Destination not from the user or clean session data (${decision.labels.join(", ")})`
+      : "Every destination comes from the prompt or clean session data",
+    model: useModel ? config.ollamaModel : "provenance-rules",
+    mode: "provenance",
+    provenance: decision.labels,
+  };
+}
+
 export async function inspect({ config, payload, log }) {
+  if (config.provenance && config.provenance !== "off" && payload.provenance) {
+    const verdict = await provenanceVerdict({ config, payload });
+    if (verdict) return verdict;
+  }
   const mode = config.ollamaModel ? config.inspectorMode : "heuristic";
   const heuristic = heuristicDecision(payload);
 

@@ -74,6 +74,8 @@ Without a model host, run `INSPECTOR_MODE=heuristic SUMMARIZER_MODE=deterministi
 | `OLLAMA_MODEL` | `qwen3-vl:8b` | Model for summarizer and inspector |
 | `INSPECTOR_MODE` | `ensemble` | `heuristic`, `model`, or `ensemble` (model OR heuristic) |
 | `INSPECTOR_PROMPT` | `hardened` | `hardened` or `naive` (the original prompt, kept for comparison) |
+| `INSPECTOR_HISTORY` | `6` | Recent calls and results per session shown to the model judge; `0` disables |
+| `PROVENANCE` | `off` | Destination provenance: `rules` or `model` names the taint detector for tool results. Calls with a destination argument (recipient, IBAN, URL, ...) are held unless every destination comes from the prompt or clean session data |
 | `SUMMARIZER_MODE` | `model` | `model` or `deterministic` |
 | `REQUIRE_MODEL` | off | `1` makes model failures hard errors instead of falling back to rules |
 | `VIOLATION_THRESHOLD` | `0.7` | Minimum confidence for a violation to count |

@@ -80,13 +80,21 @@ export function buildProxyServer(config, overrides = {}) {
   // Per-session history (keyed by passport jti) of forwarded calls and results.
   const sessions = new Map();
   const historyFor = (passport) => (config.inspectorHistory > 0 ? sessions.get(passport.jti) || [] : []);
+  // Full results per session, for destination provenance (passports with prompt hashes only).
+  const results = new Map();
+  const resultsFor = (passport) => results.get(passport.jti) || [];
   const remember = (passport, toolCall, forwarded) => {
-    if (!(config.inspectorHistory > 0) || !passport.jti) return;
+    if (!passport.jti) return;
     const text = JSON.stringify(forwarded?.result ?? forwarded?.error ?? null);
-    const entry = { tool: toolCall.name, arguments: toolCall.arguments, result: text.length > 800 ? `${text.slice(0, 800)} ...[truncated]` : text };
-    const list = [...(sessions.get(passport.jti) || []), entry].slice(-config.inspectorHistory);
-    sessions.set(passport.jti, list);
-    if (sessions.size > 10000) sessions.delete(sessions.keys().next().value);
+    if (config.inspectorHistory > 0) {
+      const entry = { tool: toolCall.name, arguments: toolCall.arguments, result: text.length > 800 ? `${text.slice(0, 800)} ...[truncated]` : text };
+      sessions.set(passport.jti, [...(sessions.get(passport.jti) || []), entry].slice(-config.inspectorHistory));
+      if (sessions.size > 10000) sessions.delete(sessions.keys().next().value);
+    }
+    if (Array.isArray(passport.user_values)) {
+      results.set(passport.jti, [...resultsFor(passport), text.slice(0, 50000)].slice(-32));
+      if (results.size > 10000) results.delete(results.keys().next().value);
+    }
   };
   const forward = overrides.forwardRpc || ((body, accessToken) => forwardRpc(config, body, accessToken));
   const securityState = {
@@ -280,7 +288,7 @@ export function buildProxyServer(config, overrides = {}) {
       // "off" exists only for ablation experiments (static/scope/resource layers alone).
       inspector = config.inspectorMode === "off"
         ? { violation: false, confidence: 0, reason: "inspection disabled", model: "off" }
-        : await inspect({ config, passport, toolCall, history: historyFor(passport) });
+        : await inspect({ config, passport, toolCall, history: historyFor(passport), results: resultsFor(passport) });
     } catch (error) {
       // Fail closed: no verdict means no forward.
       request.log.error({ err: error }, "Inspector unavailable; failing closed");

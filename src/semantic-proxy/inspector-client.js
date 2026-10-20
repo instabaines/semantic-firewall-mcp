@@ -3,8 +3,8 @@ import { createInspectionRequest, parseInspectionResponse } from "../protocol/in
 
 // Throws on transport errors, non-2xx responses, and malformed verdicts.
 // The proxy turns any throw into a deny (fail closed).
-export async function inspectAction({ config, passport, toolCall, history }) {
-  const body = createInspectionRequest({ passport, toolCall, history });
+export async function inspectAction({ config, passport, toolCall, history, results }) {
+  const body = createInspectionRequest({ passport, toolCall, history, results });
 
   const response = await request(config.inspectorUrl, {
     method: "POST",

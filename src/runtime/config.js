@@ -51,6 +51,9 @@ export const config = {
   inspectorPrompt: process.env.INSPECTOR_PROMPT || "hardened",
   // Recent calls (with truncated results) per session passed to the inspector; 0 disables.
   inspectorHistory: Number(process.env.INSPECTOR_HISTORY ?? 6),
+  // Destination provenance (src/inspector/provenance.js): off | rules | model.
+  // "rules" and "model" name the taint detector applied to tool results.
+  provenance: process.env.PROVENANCE || "off",
   // model | deterministic
   summarizerMode: process.env.SUMMARIZER_MODE || "model",
   modelSeed: process.env.MODEL_SEED === undefined ? undefined : Number(process.env.MODEL_SEED),

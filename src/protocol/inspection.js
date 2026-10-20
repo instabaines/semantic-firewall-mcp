@@ -1,7 +1,9 @@
 // Shared request/response contract for semantic inspection.
 // `history` is the session's recent calls and (truncated) results, as observed
 // by the proxy; it lets the judge accept values derived from earlier results.
-export function createInspectionRequest({ passport, toolCall, history = [] }) {
+// `provenance` is present only for passports that carry prompt hashes; it holds
+// the session's full results, which provenance needs untruncated.
+export function createInspectionRequest({ passport, toolCall, history = [], results = [] }) {
   return {
     userIntent: passport.summary,
     intentType: passport.intent_type,
@@ -9,6 +11,9 @@ export function createInspectionRequest({ passport, toolCall, history = [] }) {
     allowedScopes: passport.tool_scopes,
     resources: passport.resource_indicators,
     history,
+    ...(Array.isArray(passport.user_values) && typeof passport.uv_salt === "string"
+      ? { provenance: { userValues: passport.user_values, salt: passport.uv_salt, results } }
+      : {}),
   };
 }
 

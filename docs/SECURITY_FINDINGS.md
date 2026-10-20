@@ -58,7 +58,7 @@ symbolic model and are covered by the regression tests and E2.
   most hijacked calls but holds many legitimate intermediate steps whose arguments
   come from earlier results. Passing the session history (`INSPECTOR_HISTORY`,
   default 6) reduces this substantially for capable models. Destination
-  provenance (`src/inspector/provenance.js`, experiment E6-P) halves the false
+  provenance (`PROVENANCE=model`, `src/inspector/provenance.js`, experiment E6-P) halves the false
   alarms again with Gemma 4 as taint detector (14.7% to 6.9%, 91.4% of hijacked
   sessions still stopped). It depends on the taint detector: weaker models mark
   ordinary data as instructions, and the generic injection rules miss most
