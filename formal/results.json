@@ -1,0 +1,454 @@
+{
+  "v1.1": {
+    "flags": [],
+    "seconds": 106.7,
+    "lemmas": {
+      "executable_low": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 15,
+        "seconds": 10.3
+      },
+      "executable_high": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 15,
+        "seconds": 9.5
+      },
+      "P1_authentic_intent": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 1064,
+        "seconds": 52.6
+      },
+      "P23_confinement": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 12,
+        "seconds": 2.9
+      },
+      "P5_sender_constraint": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 15,
+        "seconds": 16.3
+      },
+      "P5_no_replay": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 2,
+        "seconds": 2.4
+      },
+      "replay_witness": {
+        "type": "exists-trace",
+        "result": "falsified",
+        "detail": "falsified - no trace found",
+        "steps": 2,
+        "seconds": 2.4
+      },
+      "P7_consent_integrity": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 15,
+        "seconds": 10.3
+      }
+    }
+  },
+  "v1.1+body-binding": {
+    "flags": [
+      "BODY_BINDING"
+    ],
+    "seconds": 75.2,
+    "lemmas": {
+      "executable_low": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 15,
+        "seconds": 8.1
+      },
+      "executable_high": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 16,
+        "seconds": 17.5
+      },
+      "P1_authentic_intent": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 588,
+        "seconds": 32.1
+      },
+      "P23_confinement": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 12,
+        "seconds": 3.0
+      },
+      "P5_sender_constraint": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 40,
+        "seconds": 4.1
+      },
+      "P5_no_replay": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 2,
+        "seconds": 2.5
+      },
+      "replay_witness": {
+        "type": "exists-trace",
+        "result": "falsified",
+        "detail": "falsified - no trace found",
+        "steps": 2,
+        "seconds": 2.5
+      },
+      "P7_consent_integrity": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 72,
+        "seconds": 5.4
+      }
+    }
+  },
+  "legacy-issuance": {
+    "flags": [
+      "LEGACY_ISSUANCE"
+    ],
+    "seconds": 76.6,
+    "lemmas": {
+      "executable_low": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 13,
+        "seconds": 9.1
+      },
+      "executable_high": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 13,
+        "seconds": 9.4
+      },
+      "P1_authentic_intent": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 13,
+        "seconds": 19.8
+      },
+      "P23_confinement": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 12,
+        "seconds": 3.5
+      },
+      "P5_sender_constraint": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 13,
+        "seconds": 18.4
+      },
+      "P5_no_replay": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 2,
+        "seconds": 2.8
+      },
+      "replay_witness": {
+        "type": "exists-trace",
+        "result": "falsified",
+        "detail": "falsified - no trace found",
+        "steps": 2,
+        "seconds": 3.0
+      },
+      "P7_consent_integrity": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 13,
+        "seconds": 10.7
+      }
+    }
+  },
+  "legacy-approval": {
+    "flags": [
+      "LEGACY_APPROVAL"
+    ],
+    "seconds": 142.9,
+    "lemmas": {
+      "executable_low": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 15,
+        "seconds": 13.1
+      },
+      "executable_high": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 15,
+        "seconds": 11.3
+      },
+      "P1_authentic_intent": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 1064,
+        "seconds": 75.9
+      },
+      "P23_confinement": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 12,
+        "seconds": 3.3
+      },
+      "P5_sender_constraint": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 15,
+        "seconds": 21.0
+      },
+      "P5_no_replay": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 2,
+        "seconds": 3.0
+      },
+      "replay_witness": {
+        "type": "exists-trace",
+        "result": "falsified",
+        "detail": "falsified - no trace found",
+        "steps": 2,
+        "seconds": 2.7
+      },
+      "P7_consent_integrity": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 15,
+        "seconds": 12.6
+      }
+    }
+  },
+  "no-replay-cache": {
+    "flags": [
+      "NO_REPLAY_CACHE"
+    ],
+    "seconds": 750.2,
+    "lemmas": {
+      "executable_low": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 15,
+        "seconds": 12.2
+      },
+      "executable_high": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 15,
+        "seconds": 12.6
+      },
+      "P1_authentic_intent": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 1064,
+        "seconds": 78.8
+      },
+      "P23_confinement": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 12,
+        "seconds": 3.3
+      },
+      "P5_sender_constraint": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 15,
+        "seconds": 19.7
+      },
+      "P5_no_replay": {
+        "result": "timeout",
+        "seconds": 600
+      },
+      "replay_witness": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 16,
+        "seconds": 12.0
+      },
+      "P7_consent_integrity": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 15,
+        "seconds": 11.4
+      }
+    }
+  },
+  "no-server-recheck": {
+    "flags": [
+      "NO_SERVER_RECHECK"
+    ],
+    "seconds": 60.8,
+    "lemmas": {
+      "executable_low": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 16,
+        "seconds": 8.9
+      },
+      "executable_high": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 16,
+        "seconds": 9.1
+      },
+      "P1_authentic_intent": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 88,
+        "seconds": 8.7
+      },
+      "P23_confinement": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 15,
+        "seconds": 10.0
+      },
+      "P5_sender_constraint": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 16,
+        "seconds": 9.1
+      },
+      "P5_no_replay": {
+        "type": "all-traces",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 2,
+        "seconds": 3.1
+      },
+      "replay_witness": {
+        "type": "exists-trace",
+        "result": "falsified",
+        "detail": "falsified - no trace found",
+        "steps": 2,
+        "seconds": 3.0
+      },
+      "P7_consent_integrity": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 16,
+        "seconds": 9.0
+      }
+    }
+  },
+  "v1.0 (all legacy)": {
+    "flags": [
+      "LEGACY_ISSUANCE",
+      "LEGACY_APPROVAL",
+      "NO_REPLAY_CACHE",
+      "NO_SERVER_RECHECK"
+    ],
+    "seconds": 61.7,
+    "lemmas": {
+      "executable_low": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 12,
+        "seconds": 7.9
+      },
+      "executable_high": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 12,
+        "seconds": 7.8
+      },
+      "P1_authentic_intent": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 12,
+        "seconds": 8.1
+      },
+      "P23_confinement": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 13,
+        "seconds": 9.5
+      },
+      "P5_sender_constraint": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 12,
+        "seconds": 7.7
+      },
+      "P5_no_replay": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 16,
+        "seconds": 7.0
+      },
+      "replay_witness": {
+        "type": "exists-trace",
+        "result": "verified",
+        "detail": "verified",
+        "steps": 14,
+        "seconds": 6.0
+      },
+      "P7_consent_integrity": {
+        "type": "all-traces",
+        "result": "falsified",
+        "detail": "falsified - found trace",
+        "steps": 12,
+        "seconds": 7.6
+      }
+    }
+  },
+  "_meta": {
+    "tamarin": [
+      "tamarin-prover 1.12.0, (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, 2010-2023"
+    ],
+    "model": "semantic_firewall.spthy"
+  }
+}

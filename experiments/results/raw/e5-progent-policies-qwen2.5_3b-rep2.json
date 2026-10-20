@@ -1,0 +1,165 @@
+{
+  "R1": {
+    "policy": {
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "sales-q1",
+            "objective": "Generate a revenue report"
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.4
+  },
+  "R2": {
+    "policy": {
+      "list_datasets": [
+        [
+          100,
+          0,
+          {},
+          0
+        ]
+      ],
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "Sales-Q2"
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "Sales-Q2",
+            "objective": "Sales Q2 performance by region"
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.8
+  },
+  "R3": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "sales-q1"
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.3
+  },
+  "RD1": {
+    "policy": {},
+    "error": null,
+    "seconds": 0.1
+  },
+  "RD2": {
+    "policy": {},
+    "error": null,
+    "seconds": 0.1
+  },
+  "EX1": {
+    "policy": {
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "sales-q1"
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.3
+  },
+  "DL1": {
+    "policy": {
+      "delete_dataset": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "sales-q2",
+            "confirmation": "DELETE"
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.4
+  },
+  "R1G": {
+    "policy": {
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "sales-q1",
+            "objective": "Generate a revenue report"
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.4
+  },
+  "R2G": {
+    "policy": {
+      "list_datasets": [
+        [
+          100,
+          0,
+          {},
+          0
+        ]
+      ],
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "Sales-Q2"
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": "Sales-Q2",
+            "objective": "Sales Q2 performance by region"
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.8
+  }
+}

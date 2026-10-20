@@ -7,16 +7,27 @@ import { listDatasets, listReports } from "../protected-resource/demo-db.js";
 import { eventBus } from "../dashboard/event-bus.js";
 import { extractIntentToken, verifyIntentPassport } from "../protocol/contextual-passport.js";
 import { createDpopProof } from "../protocol/sender-constrained.js";
-import { buildPolicyContext, checkResourceBinding, checkToolScope, extractTargetResources, isHighRiskTool } from "./policy-engine.js";
+import { secretMatches } from "../protocol/bearer.js";
+import {
+  PASSTHROUGH_METHODS,
+  buildPolicyContext,
+  checkResourceBinding,
+  checkResourceReadBinding,
+  checkToolScope,
+  extractTargetResources,
+  isHighRiskTool,
+} from "./policy-engine.js";
 import { readRuntimeEnv } from "../runtime/active-stack.js";
 import { inspectAction } from "./inspector-client.js";
 
 async function forwardRpc(config, body, accessToken) {
+  const payload = JSON.stringify(body);
   const dpop = createDpopProof({
     config,
     accessToken,
     method: "POST",
     url: config.upstreamUrl,
+    body: payload,
   });
 
   const response = await httpRequest(config.upstreamUrl, {
@@ -27,11 +38,14 @@ async function forwardRpc(config, body, accessToken) {
       authorization: `Bearer ${accessToken}`,
       dpop,
     },
-    body: JSON.stringify(body),
+    body: payload,
   });
 
   const contentType = String(response.headers["content-type"] || "");
   const raw = await response.body.text();
+  if (!raw.trim()) {
+    return {};
+  }
 
   if (contentType.includes("text/event-stream")) {
     const match = raw.match(/data:\s*(\{[\s\S]*\})/);
@@ -44,11 +58,36 @@ async function forwardRpc(config, body, accessToken) {
   return JSON.parse(raw);
 }
 
+// Maps an inspector verdict to allow | hold | block.
+//  - below the violation threshold: allow
+//  - high-risk tools: always routed to a human (hold), never silently allowed
+//  - other tools: block at >= autoBlockThreshold, otherwise hold
+export function decideOnVerdict({ config, toolName, inspector }) {
+  if (!inspector.violation || inspector.confidence < config.violationThreshold) {
+    return "allow";
+  }
+  if (isHighRiskTool(toolName)) {
+    return "hold";
+  }
+  return inspector.confidence >= config.autoBlockThreshold ? "block" : "hold";
+}
+
 // Diagram box: Semantic Proxy (PEP)
 export function buildProxyServer(config, overrides = {}) {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: { level: config.logLevel } });
   const approvals = new ApprovalStore({ timeoutMs: config.approvalTimeoutMs, eventBus });
   const inspect = overrides.inspectAction || ((input) => inspectAction(input));
+  // Per-session history (keyed by passport jti) of forwarded calls and results.
+  const sessions = new Map();
+  const historyFor = (passport) => (config.inspectorHistory > 0 ? sessions.get(passport.jti) || [] : []);
+  const remember = (passport, toolCall, forwarded) => {
+    if (!(config.inspectorHistory > 0) || !passport.jti) return;
+    const text = JSON.stringify(forwarded?.result ?? forwarded?.error ?? null);
+    const entry = { tool: toolCall.name, arguments: toolCall.arguments, result: text.length > 800 ? `${text.slice(0, 800)} ...[truncated]` : text };
+    const list = [...(sessions.get(passport.jti) || []), entry].slice(-config.inspectorHistory);
+    sessions.set(passport.jti, list);
+    if (sessions.size > 10000) sessions.delete(sessions.keys().next().value);
+  };
   const forward = overrides.forwardRpc || ((body, accessToken) => forwardRpc(config, body, accessToken));
   const securityState = {
     currentAudience: config.protectedResourceAudience,
@@ -64,6 +103,15 @@ export function buildProxyServer(config, overrides = {}) {
     securityState.senderConstraintThumbprint = event.payload.senderConstraintThumbprint || securityState.senderConstraintThumbprint;
     securityState.lastRequestDpopVerified = Boolean(event.payload.dpopVerified);
   };
+
+  // Second layer against dashboard script injection: no inline or third-party script.
+  app.addHook("onSend", async (request, reply, payload) => {
+    if (request.url.startsWith("/dashboard")) {
+      reply.header("content-security-policy", "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+      reply.header("x-content-type-options", "nosniff");
+    }
+    return payload;
+  });
 
   app.register(sensible);
   app.register(fastifyStatic, {
@@ -120,8 +168,14 @@ export function buildProxyServer(config, overrides = {}) {
   });
 
   app.post("/approvals/:id/decision", async (request, reply) => {
-    const approved = Boolean(request.body?.approved);
-    const approver = request.body?.approver || "human";
+    // Only the human approver holds this token; the agent never does.
+    if (!secretMatches(request.headers["x-approver-token"], config.approverToken)) {
+      eventBus.publish("approval.unauthorized_decision", { id: request.params.id });
+      return reply.unauthorized("Approver token required");
+    }
+
+    const approved = request.body?.approved === true;
+    const approver = String(request.body?.approver || "human");
     const ok = approved
       ? approvals.approve(request.params.id, approver)
       : approvals.reject(request.params.id, approver);
@@ -133,17 +187,27 @@ export function buildProxyServer(config, overrides = {}) {
     return { ok: true };
   });
 
+  const deny = (reply, rpc, status, reason, message, data = {}) => {
+    eventBus.publish("proxy.denied", { reason, ...data });
+    return reply.code(status).send({
+      jsonrpc: "2.0",
+      id: rpc?.id ?? null,
+      error: { code: status, message, data: { reason, ...data } },
+    });
+  };
+
   app.post("/mcp", async (request, reply) => {
     const rpc = request.body;
-    const token = extractIntentToken(request);
 
-    if (!token) {
-      return reply.forbidden("Missing Intent JWT");
+    // One JSON-RPC request per HTTP request. Batches would let a tools/call ride
+    // inside an array the policy layer never inspects.
+    if (!rpc || typeof rpc !== "object" || Array.isArray(rpc) || typeof rpc.method !== "string") {
+      return deny(reply, null, 400, "malformed_rpc", "Expected a single JSON-RPC request object");
     }
 
-    if (rpc.method !== "tools/call") {
-      eventBus.publish("proxy.rpc_passthrough", { method: rpc.method });
-      return forward(rpc, token);
+    const token = extractIntentToken(request);
+    if (!token) {
+      return deny(reply, rpc, 401, "missing_passport", "Missing Intent JWT");
     }
 
     let passport;
@@ -153,7 +217,29 @@ export function buildProxyServer(config, overrides = {}) {
       });
     } catch (error) {
       request.log.warn({ err: error }, "Intent JWT verification failed");
-      return reply.forbidden("Invalid Intent JWT");
+      return deny(reply, rpc, 403, "invalid_passport", "Invalid Intent JWT");
+    }
+
+    // Notifications have no response and no side effects on tools.
+    if (rpc.method.startsWith("notifications/") || PASSTHROUGH_METHODS.has(rpc.method)) {
+      eventBus.publish("proxy.rpc_passthrough", { method: rpc.method });
+      return forward(rpc, token);
+    }
+
+    if (rpc.method === "resources/read") {
+      const uri = rpc.params?.uri;
+      if (!checkResourceReadBinding(passport, uri)) {
+        return deny(reply, rpc, 403, "resource_binding_mismatch", "Resource binding mismatch", {
+          attemptedResources: [uri],
+          allowedResources: passport.resource_indicators,
+        });
+      }
+      eventBus.publish("proxy.rpc_passthrough", { method: rpc.method, uri });
+      return forward(rpc, token);
+    }
+
+    if (rpc.method !== "tools/call") {
+      return deny(reply, rpc, 403, "method_not_allowed", `MCP method ${rpc.method} is not permitted`);
     }
 
     const toolCall = {
@@ -171,77 +257,53 @@ export function buildProxyServer(config, overrides = {}) {
     if (!checkToolScope(passport, toolCall.name)) {
       securityState.lastRequestModelBacked = false;
       securityState.lastRequestDpopVerified = false;
-      eventBus.publish("proxy.denied", {
-        reason: "scope_mismatch",
-        toolName: toolCall.name,
-        summary: passport.summary,
-      });
-      return reply.code(403).send({
-        jsonrpc: "2.0",
-        id: rpc.id ?? null,
-        error: {
-          code: 403,
-          message: "Intent scope mismatch",
-          data: {
-            summary: passport.summary,
-            attemptedTool: toolCall.name,
-            allowedScopes: passport.tool_scopes,
-          },
-        },
+      return deny(reply, rpc, 403, "scope_mismatch", "Intent scope mismatch", {
+        attemptedTool: toolCall.name,
+        allowedScopes: passport.tool_scopes,
       });
     }
 
     if (!checkResourceBinding(passport, toolCall)) {
       securityState.lastRequestModelBacked = false;
       securityState.lastRequestDpopVerified = false;
-      eventBus.publish("proxy.denied", {
-        reason: "resource_binding_mismatch",
+      return deny(reply, rpc, 403, "resource_binding_mismatch", "Resource binding mismatch", {
         toolName: toolCall.name,
-        targets: extractTargetResources(toolCall),
-        allowed: passport.resource_indicators,
-      });
-      return reply.code(403).send({
-        jsonrpc: "2.0",
-        id: rpc.id ?? null,
-        error: {
-          code: 403,
-          message: "Resource binding mismatch",
-          data: {
-            attemptedResources: extractTargetResources(toolCall),
-            allowedResources: passport.resource_indicators,
-          },
-        },
+        attemptedResources: extractTargetResources(toolCall),
+        allowedResources: passport.resource_indicators,
       });
     }
 
-    const inspector = await inspect({ config, passport, toolCall });
+    const policyContext = buildPolicyContext(passport, toolCall);
+
+    let inspector;
+    try {
+      // "off" exists only for ablation experiments (static/scope/resource layers alone).
+      inspector = config.inspectorMode === "off"
+        ? { violation: false, confidence: 0, reason: "inspection disabled", model: "off" }
+        : await inspect({ config, passport, toolCall, history: historyFor(passport) });
+    } catch (error) {
+      // Fail closed: no verdict means no forward.
+      request.log.error({ err: error }, "Inspector unavailable; failing closed");
+      securityState.lastRequestModelBacked = false;
+      return deny(reply, rpc, 503, "inspector_unavailable", "Semantic inspection unavailable", {
+        toolName: toolCall.name,
+        error: error.message,
+      });
+    }
+
     securityState.lastRequestModelBacked = inspector.model !== "heuristic-slm";
     securityState.lastRequestDpopVerified = false;
-    const policyContext = buildPolicyContext(passport, toolCall);
-    const needsApproval = inspector.violation && inspector.confidence >= config.violationThreshold;
-    const autoBlock = inspector.violation && !isHighRiskTool(toolCall.name) && inspector.confidence >= 0.95;
+    const decision = decideOnVerdict({ config, toolName: toolCall.name, inspector });
 
-    if (autoBlock) {
-      eventBus.publish("proxy.denied", {
-        reason: "semantic_policy",
+    if (decision === "block") {
+      return deny(reply, rpc, 403, "semantic_policy", "Semantic policy denied the tool call", {
         toolName: toolCall.name,
         inspector,
-      });
-      return reply.code(403).send({
-        jsonrpc: "2.0",
-        id: rpc.id ?? null,
-        error: {
-          code: 403,
-          message: "Semantic policy denied the tool call",
-          data: {
-            inspector,
-            policyContext,
-          },
-        },
+        policyContext,
       });
     }
 
-    if (needsApproval) {
+    if (decision === "hold") {
       const pending = approvals.create({
         rpc,
         inspector,
@@ -253,34 +315,24 @@ export function buildProxyServer(config, overrides = {}) {
         "Tool call paused pending human approval",
       );
 
-      const decision = await pending.promise;
-      if (!decision.approved) {
-        eventBus.publish("proxy.denied", {
-          reason: "human_denied",
+      const humanDecision = await pending.promise;
+      if (!humanDecision.approved) {
+        return deny(reply, rpc, 403, "human_denied", "Human approval denied", {
           toolName: toolCall.name,
           inspector,
-        });
-        return reply.code(403).send({
-          jsonrpc: "2.0",
-          id: rpc.id ?? null,
-          error: {
-            code: 403,
-            message: "Human approval denied",
-            data: {
-              inspector,
-              policyContext,
-              decision,
-            },
-          },
+          policyContext,
+          decision: humanDecision,
         });
       }
     }
 
     const forwarded = await forward(rpc, token);
+    remember(passport, toolCall, forwarded);
     eventBus.publish("proxy.forwarded", {
       toolName: toolCall.name,
       summary: passport.summary,
       inspector,
+      decision,
     });
     return forwarded;
   });

@@ -1,7 +1,7 @@
 {
   "name": "hardened_mcp_gateway",
-  "version": "1.0.0",
-  "description": "Semantic proxy demo for hardened MCP tool mediation",
+  "version": "1.1.0",
+  "description": "Intent-bound authorization (semantic firewall) for MCP tool calls: reference implementation and evaluation",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
@@ -15,11 +15,16 @@
     "demo:approve": "node src/demo/client.js approve",
     "demo:guided": "node src/demo/guided-attack.js",
     "presenter": "node src/demo/presenter-mode.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "experiment:e1": "node experiments/run-enforcement.js",
+    "experiment:e1:no-model": "node experiments/run-enforcement.js --configs C0,C1,C2,C3",
+    "experiment:e2": "node experiments/run-protocol-attacks.js --target fixed --root .",
+    "experiment:e3": "node experiments/run-summarizer.js",
+    "analyze": "node experiments/analyze.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@fastify/sensible": "^6.0.4",
     "@fastify/static": "^9.0.0",
@@ -31,5 +36,8 @@
   },
   "devDependencies": {
     "vitest": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

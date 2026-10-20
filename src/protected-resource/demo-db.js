@@ -100,6 +100,30 @@ function ensureDb(config) {
   return db;
 }
 
+// Restores the seed data. Used by the evaluation harness between cases so that a
+// destructive call that got through in one case does not affect the next.
+export function resetDb(config) {
+  const db = ensureDb(config);
+  db.exec("DELETE FROM reports; DELETE FROM sales; DELETE FROM datasets;");
+  const insertDataset = db.prepare(`
+    INSERT INTO datasets (id, uri, name, description, sensitivity)
+    VALUES (@id, @uri, @name, @description, @sensitivity)
+  `);
+  const insertSale = db.prepare(`
+    INSERT INTO sales (dataset_id, order_date, region, rep, amount, customer_email)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  db.transaction(() => {
+    DATASETS.forEach((dataset) => insertDataset.run(dataset));
+    SALES_ROWS.forEach((row) => insertSale.run(...row));
+  })();
+}
+
+export function closeDb() {
+  dbInstance?.close();
+  dbInstance = undefined;
+}
+
 // Demo protected resource store backing the MCP tools.
 export function getDb(config) {
   return ensureDb(config);

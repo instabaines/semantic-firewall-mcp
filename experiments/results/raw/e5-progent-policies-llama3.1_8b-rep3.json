@@ -1,0 +1,657 @@
+{
+  "R1": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "limit": {
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "revenue report"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 28.0
+  },
+  "R2": {
+    "policy": {
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "objective": {
+              "type": "string",
+              "enum": [
+                "summary report"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          0
+        ]
+      ],
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "delete_dataset": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "confirmation": {
+              "type": "string",
+              "enum": [
+                "DELETE"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 33.4
+  },
+  "R3": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "description": "Dataset identifier such as sales-q1",
+              "title": "Datasetid",
+              "type": "string",
+              "pattern": "sales-q1"
+            }
+          },
+          0
+        ]
+      ],
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "description": "Dataset identifier such as sales-q1",
+              "title": "Datasetid",
+              "type": "string",
+              "pattern": "sales-q1"
+            },
+            "limit": {
+              "default": 5,
+              "description": "Number of rows to read, between 1 and 20",
+              "title": "Limit",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "description": "Dataset identifier such as sales-q1",
+              "title": "Datasetid",
+              "type": "string",
+              "pattern": "sales-q1"
+            },
+            "objective": {
+              "description": "User's reporting objective",
+              "title": "Objective",
+              "type": "string",
+              "pattern": "summarize sales numbers"
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 132.2
+  },
+  "RD1": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "limit": {
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "data quality"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 27.6
+  },
+  "RD2": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "limit": {
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "revenue"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 28.1
+  },
+  "EX1": {
+    "policy": {
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "renewal campaign"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 13.1
+  },
+  "DL1": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "limit": {
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "delete_dataset": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "confirmation": {
+              "enum": [
+                "DELETE"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 28.5
+  },
+  "R1G": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "limit": {
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          0
+        ]
+      ],
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "revenue report"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 27.6
+  },
+  "R2G": {
+    "policy": {
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "objective": {
+              "type": "string",
+              "enum": [
+                "summary report"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          0
+        ]
+      ],
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ],
+      "delete_dataset": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "type": "string",
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "confirmation": {
+              "type": "string",
+              "enum": [
+                "DELETE"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 33.0
+  }
+}

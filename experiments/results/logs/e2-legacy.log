@@ -1,0 +1,12 @@
+legacy X1 5/5 succeeded (0 invalid) - mint 200; call 200
+legacy X2 5/5 succeeded (0 invalid) - call 200
+legacy X3 0/5 succeeded (0 invalid) - call 403
+legacy X4 5/5 succeeded (0 invalid) - call 200 {"result":{"content":[{"type":"text","text":"Dataset sales-q2 deleted."}],"structuredContent":{"datasetId":"sales-q2","d
+legacy X5 5/5 succeeded (0 invalid) - call 200
+legacy X6 5/5 succeeded (0 invalid) - decision 200; call 200
+legacy X7 5/5 succeeded (0 invalid) - call 200
+legacy X8 0/5 succeeded (0 invalid) - call 401
+legacy X9 5/5 succeeded (0 invalid) - original 200; replay 200
+legacy X12 5/5 succeeded (0 invalid) - substituted call 200
+legacy X10 5/5 succeeded (0 invalid) - call 200
+legacy X11 5/5 succeeded (0 invalid) - escapes=false; csp=no (static check)

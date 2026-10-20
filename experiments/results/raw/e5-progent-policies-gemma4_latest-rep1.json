@@ -1,0 +1,207 @@
+{
+  "R1": {
+    "policy": {
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "revenue"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 1.4
+  },
+  "R2": {
+    "policy": {
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "Sales Q2"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "summary report of Sales Q2 performance by region"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 1.0
+  },
+  "R3": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.7
+  },
+  "RD1": {
+    "policy": {
+      "read_dataset_rows": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.7
+  },
+  "RD2": {
+    "policy": {
+      "get_dataset_overview": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "Sales Q1"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.7
+  },
+  "EX1": {
+    "policy": {
+      "export_customer_emails": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.7
+  },
+  "DL1": {
+    "policy": {
+      "delete_dataset": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q2"
+              ]
+            },
+            "confirmation": {
+              "enum": [
+                "DELETE"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.9
+  },
+  "R1G": {
+    "policy": {
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "sales-q1"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "revenue"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 0.9
+  },
+  "R2G": {
+    "policy": {
+      "generate_report": [
+        [
+          100,
+          0,
+          {
+            "datasetId": {
+              "enum": [
+                "Sales Q2"
+              ]
+            },
+            "objective": {
+              "enum": [
+                "summary report of Sales Q2 performance by region"
+              ]
+            }
+          },
+          0
+        ]
+      ]
+    },
+    "error": null,
+    "seconds": 1.0
+  }
+}

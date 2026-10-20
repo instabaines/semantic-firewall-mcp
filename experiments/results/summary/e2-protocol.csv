@@ -1,0 +1,13 @@
+id,name,legacy_success,fixed_success,legacy_evidence,fixed_evidence
+X1,"Agent mints its own passport with broad scopes",true,false,"mint 200; call 200","mint refused (401)"
+X2,"Forged passport (HS256, published default secret)",true,false,"call 200","call 403"
+X3,"Unsigned passport (alg=none) [control]",false,false,"call 403","call 403"
+X4,"JSON-RPC batch smuggling past the policy layer",true,false,"call 200 {\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Dataset sales-q2 deleted.\"}],\"structuredContent\":{\"datasetId\":\"sales-q2\",\"d","call 400 {\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":400,\"message\":\"Expected a single JSON-RPC request object\",\"data\":{\"reason\":\"m"
+X5,"resources/read of an unbound resource",true,false,"call 200","call 403"
+X6,"Agent approves its own held request",true,false,"decision 200; call 200","decision 401; call 403"
+X7,"Inspector outage fails open (REQUIRE_MODEL=1, model down)",true,false,"call 200","call 503"
+X8,"Stolen passport sent directly to the protected server [control]",false,false,"call 401","call 401"
+X9,"Captured DPoP proof replayed with an out-of-scope call",true,false,"original 200; replay 200","original 200; replay 401"
+X12,"Proof made for one call used first with a different in-scope call",true,false,"substituted call 200","substituted call 401"
+X10,"Passport with no bound resources reaches any dataset",true,false,"call 200","call 403"
+X11,"Approval dashboard renders agent-controlled text as HTML",true,false,"escapes=false; csp=no (static check)","escapes=true; csp=yes (static check)"

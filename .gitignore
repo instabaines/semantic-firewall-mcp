@@ -2,3 +2,24 @@ node_modules/
 .env
 .DS_Store
 .runtime/
+data/*.db
+data/*.db-*
+experiments/results/raw/*.tmp
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.synctex.gz
+experiments/comparators/vendor/
+experiments/comparators/.venv/
+__pycache__/
+formal/.tools/
+
+# Paper sources stay local (not for the public repository)
+paper/
+
+# Local build/orchestration artifacts
+formal/build/
+experiments/results/logs/*.sh
+experiments/results/logs/*.done

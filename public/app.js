@@ -53,8 +53,35 @@ const EVENT_META = {
   },
 };
 
+// Every value rendered into HTML can originate from agent-controlled tool
+// arguments, so it is escaped. Unescaped rendering would let a tool argument
+// script the approver's browser (for example, click "Approve").
+function esc(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function json(value) {
-  return JSON.stringify(value, null, 2);
+  return esc(JSON.stringify(value, null, 2));
+}
+
+function approverToken() {
+  try {
+    let token = sessionStorage.getItem("approverToken");
+    if (!token) {
+      token = window.prompt("Approver token (printed by the stack at startup):") || "";
+      if (token) {
+        sessionStorage.setItem("approverToken", token);
+      }
+    }
+    return token;
+  } catch {
+    return window.prompt("Approver token (printed by the stack at startup):") || "";
+  }
 }
 
 function setConnectionStatus(text, tone = "online") {
@@ -75,9 +102,9 @@ function renderDatasets(datasets) {
   const safeDatasets = Array.isArray(datasets) ? datasets : [];
   datasetsEl.innerHTML = safeDatasets.map((dataset) => `
     <div class="item">
-      <strong>${dataset.name}</strong>
-      <div class="meta">${dataset.id} · ${dataset.uri}</div>
-      <div class="meta">${dataset.rowCount} rows · $${dataset.totalRevenue} revenue</div>
+      <strong>${esc(dataset.name)}</strong>
+      <div class="meta">${esc(dataset.id)} · ${esc(dataset.uri)}</div>
+      <div class="meta">${esc(dataset.rowCount)} rows · $${esc(dataset.totalRevenue)} revenue</div>
     </div>
   `).join("") || `<div class="item"><div class="meta">No datasets loaded.</div></div>`;
 }
@@ -87,20 +114,26 @@ function renderReports(reports) {
   reportsEl.innerHTML = safeReports.length
     ? safeReports.map((report) => `
       <div class="item">
-        <strong>${report.datasetName}</strong>
-        <div class="meta">${report.createdAt}</div>
-        <div>${report.objective}</div>
+        <strong>${esc(report.datasetName)}</strong>
+        <div class="meta">${esc(report.createdAt)}</div>
+        <div>${esc(report.objective)}</div>
       </div>
     `).join("")
     : `<div class="item"><div class="meta">No reports yet.</div></div>`;
 }
 
 async function decideApproval(id, approved) {
-  await fetch(`/approvals/${id}/decision`, {
+  const response = await fetch(`/approvals/${encodeURIComponent(id)}/decision`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "x-approver-token": approverToken() },
     body: JSON.stringify({ approved, approver: "dashboard-user" }),
   });
+  if (response.status === 401) {
+    try {
+      sessionStorage.removeItem("approverToken");
+    } catch {}
+    window.alert("Approver token rejected.");
+  }
 }
 
 function renderApprovals(approvals) {
@@ -108,14 +141,14 @@ function renderApprovals(approvals) {
   approvalsEl.innerHTML = safeApprovals.length
     ? safeApprovals.map((approval) => `
       <div class="item">
-        <strong>${approval.policyContext.toolName}</strong>
-        <div class="meta">${approval.createdAt}</div>
-        <div>${approval.policyContext.userIntent}</div>
-        <div class="meta">Reason: ${approval.inspector.reason}</div>
+        <strong>${esc(approval.policyContext.toolName)}</strong>
+        <div class="meta">${esc(approval.createdAt)}</div>
+        <div>${esc(approval.policyContext.userIntent)}</div>
+        <div class="meta">Reason: ${esc(approval.inspector.reason)}</div>
         <pre>${json(approval.policyContext.toolArgs)}</pre>
         <div class="button-row">
-          <button class="button secondary" data-approve="${approval.id}">Approve</button>
-          <button class="button danger" data-deny="${approval.id}">Deny</button>
+          <button class="button secondary" data-approve="${esc(approval.id)}">Approve</button>
+          <button class="button danger" data-deny="${esc(approval.id)}">Deny</button>
         </div>
       </div>
     `).join("")
@@ -140,10 +173,10 @@ function renderEvent(event) {
   div.className = `event ${danger ? "danger" : ""} ${ok ? "ok" : ""}`;
   div.innerHTML = `
     <div class="event-label">
-      <span class="event-title">${meta.title}</span>
-      <span class="event-chip">${meta.chip}</span>
+      <span class="event-title">${esc(meta.title)}</span>
+      <span class="event-chip">${esc(meta.chip)}</span>
     </div>
-    <div class="meta">${event.at}</div>
+    <div class="meta">${esc(event.at)}</div>
     <pre>${json(event.payload)}</pre>
   `;
   eventsEl.prepend(div);

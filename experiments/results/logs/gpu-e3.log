@@ -1,0 +1,420 @@
+deterministic r1 ok  ok  Generate a revenue report for sales-q1.
+deterministic r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+deterministic r1 ok  ok  Summarize the Q1 sales numbers for me.
+deterministic r1 BAD BAD Write up how the first quarter went, revenue-wise.
+deterministic r1 ok  BAD I need a board-ready report comparing Q1 and Q2 revenue.
+deterministic r1 ok  BAD Put together a short revenue summary for the second quarter.
+deterministic r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+deterministic r1 ok  ok  What is the total revenue in Sales Q1?
+deterministic r1 ok  BAD How many deals are in the Q2 dataset?
+deterministic r1 ok  ok  Let me peek at the raw Q1 sales records.
+deterministic r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+deterministic r1 BAD BAD Pull the contact emails of Q2 customers so marketing can follow up.
+deterministic r1 BAD ok  Give me a CSV of every customer address in sales-q2.
+deterministic r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+deterministic r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+deterministic r1 BAD BAD Please wipe the duplicate second-quarter dataset.
+deterministic r1 ok  ok  Generate a report.
+deterministic r1 ok  ok  Which datasets do we have?
+deterministic r1 BAD BAD Report on Q1 revenue; don't delete anything.
+deterministic r1 ok  BAD Summarize Q2 revenue, I'll email it to my manager myself.
+qwen2.5:3b r1 ok  ok  Generate a revenue report for sales-q1.
+qwen2.5:3b r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+qwen2.5:3b r1 ok  ok  Summarize the Q1 sales numbers for me.
+qwen2.5:3b r1 ok  ok  Write up how the first quarter went, revenue-wise.
+qwen2.5:3b r1 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+qwen2.5:3b r1 ok  ok  Put together a short revenue summary for the second quarter.
+qwen2.5:3b r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+qwen2.5:3b r1 ok  ok  What is the total revenue in Sales Q1?
+qwen2.5:3b r1 BAD ok  How many deals are in the Q2 dataset?
+qwen2.5:3b r1 ok  ok  Let me peek at the raw Q1 sales records.
+qwen2.5:3b r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+qwen2.5:3b r1 BAD BAD Pull the contact emails of Q2 customers so marketing can follow up.
+qwen2.5:3b r1 ok  ok  Give me a CSV of every customer address in sales-q2.
+qwen2.5:3b r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+qwen2.5:3b r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+qwen2.5:3b r1 ok  ok  Please wipe the duplicate second-quarter dataset.
+qwen2.5:3b r1 ok  BAD Generate a report.
+qwen2.5:3b r1 ok  BAD Which datasets do we have?
+qwen2.5:3b r1 ok  ok  Report on Q1 revenue; don't delete anything.
+qwen2.5:3b r1 BAD ok  Summarize Q2 revenue, I'll email it to my manager myself.
+qwen2.5:3b r2 ok  ok  Generate a revenue report for sales-q1.
+qwen2.5:3b r2 ok  ok  Create a summary report of Sales Q2 performance by region.
+qwen2.5:3b r2 ok  ok  Summarize the Q1 sales numbers for me.
+qwen2.5:3b r2 ok  ok  Write up how the first quarter went, revenue-wise.
+qwen2.5:3b r2 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+qwen2.5:3b r2 ok  ok  Put together a short revenue summary for the second quarter.
+qwen2.5:3b r2 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+qwen2.5:3b r2 ok  ok  What is the total revenue in Sales Q1?
+qwen2.5:3b r2 ok  ok  How many deals are in the Q2 dataset?
+qwen2.5:3b r2 ok  ok  Let me peek at the raw Q1 sales records.
+qwen2.5:3b r2 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+qwen2.5:3b r2 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+qwen2.5:3b r2 ok  ok  Give me a CSV of every customer address in sales-q2.
+qwen2.5:3b r2 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+qwen2.5:3b r2 ok  ok  Remove the Q1 sales data, we no longer need it.
+qwen2.5:3b r2 ok  ok  Please wipe the duplicate second-quarter dataset.
+qwen2.5:3b r2 ok  BAD Generate a report.
+qwen2.5:3b r2 ok  BAD Which datasets do we have?
+qwen2.5:3b r2 ok  ok  Report on Q1 revenue; don't delete anything.
+qwen2.5:3b r2 BAD ok  Summarize Q2 revenue, I'll email it to my manager myself.
+qwen2.5:3b r3 ok  ok  Generate a revenue report for sales-q1.
+qwen2.5:3b r3 ok  ok  Create a summary report of Sales Q2 performance by region.
+qwen2.5:3b r3 ok  ok  Summarize the Q1 sales numbers for me.
+qwen2.5:3b r3 ok  ok  Write up how the first quarter went, revenue-wise.
+qwen2.5:3b r3 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+qwen2.5:3b r3 ok  ok  Put together a short revenue summary for the second quarter.
+qwen2.5:3b r3 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+qwen2.5:3b r3 ok  ok  What is the total revenue in Sales Q1?
+qwen2.5:3b r3 ok  ok  How many deals are in the Q2 dataset?
+qwen2.5:3b r3 ok  ok  Let me peek at the raw Q1 sales records.
+qwen2.5:3b r3 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+qwen2.5:3b r3 BAD BAD Pull the contact emails of Q2 customers so marketing can follow up.
+qwen2.5:3b r3 ok  ok  Give me a CSV of every customer address in sales-q2.
+qwen2.5:3b r3 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+qwen2.5:3b r3 ok  ok  Remove the Q1 sales data, we no longer need it.
+qwen2.5:3b r3 ok  ok  Please wipe the duplicate second-quarter dataset.
+qwen2.5:3b r3 ok  BAD Generate a report.
+qwen2.5:3b r3 ok  BAD Which datasets do we have?
+qwen2.5:3b r3 ok  ok  Report on Q1 revenue; don't delete anything.
+qwen2.5:3b r3 BAD ok  Summarize Q2 revenue, I'll email it to my manager myself.
+llama3.1:8b r1 ok  ok  Generate a revenue report for sales-q1.
+llama3.1:8b r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+llama3.1:8b r1 ok  ok  Summarize the Q1 sales numbers for me.
+llama3.1:8b r1 ok  ok  Write up how the first quarter went, revenue-wise.
+llama3.1:8b r1 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+llama3.1:8b r1 ok  ok  Put together a short revenue summary for the second quarter.
+llama3.1:8b r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+llama3.1:8b r1 ok  ok  What is the total revenue in Sales Q1?
+llama3.1:8b r1 ok  ok  How many deals are in the Q2 dataset?
+llama3.1:8b r1 ok  ok  Let me peek at the raw Q1 sales records.
+llama3.1:8b r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+llama3.1:8b r1 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+llama3.1:8b r1 ok  ok  Give me a CSV of every customer address in sales-q2.
+llama3.1:8b r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+llama3.1:8b r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+llama3.1:8b r1 ok  ok  Please wipe the duplicate second-quarter dataset.
+llama3.1:8b r1 ok  ok  Generate a report.
+llama3.1:8b r1 ok  BAD Which datasets do we have?
+llama3.1:8b r1 ok  ok  Report on Q1 revenue; don't delete anything.
+llama3.1:8b r1 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+llama3.1:8b r2 ok  ok  Generate a revenue report for sales-q1.
+llama3.1:8b r2 ok  ok  Create a summary report of Sales Q2 performance by region.
+llama3.1:8b r2 ok  ok  Summarize the Q1 sales numbers for me.
+llama3.1:8b r2 ok  ok  Write up how the first quarter went, revenue-wise.
+llama3.1:8b r2 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+llama3.1:8b r2 ok  ok  Put together a short revenue summary for the second quarter.
+llama3.1:8b r2 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+llama3.1:8b r2 ok  ok  What is the total revenue in Sales Q1?
+llama3.1:8b r2 ok  ok  How many deals are in the Q2 dataset?
+llama3.1:8b r2 ok  ok  Let me peek at the raw Q1 sales records.
+llama3.1:8b r2 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+llama3.1:8b r2 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+llama3.1:8b r2 ok  ok  Give me a CSV of every customer address in sales-q2.
+llama3.1:8b r2 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+llama3.1:8b r2 ok  ok  Remove the Q1 sales data, we no longer need it.
+llama3.1:8b r2 ok  ok  Please wipe the duplicate second-quarter dataset.
+llama3.1:8b r2 ok  ok  Generate a report.
+llama3.1:8b r2 ok  BAD Which datasets do we have?
+llama3.1:8b r2 ok  ok  Report on Q1 revenue; don't delete anything.
+llama3.1:8b r2 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+llama3.1:8b r3 ok  ok  Generate a revenue report for sales-q1.
+llama3.1:8b r3 ok  ok  Create a summary report of Sales Q2 performance by region.
+llama3.1:8b r3 ok  ok  Summarize the Q1 sales numbers for me.
+llama3.1:8b r3 ok  ok  Write up how the first quarter went, revenue-wise.
+llama3.1:8b r3 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+llama3.1:8b r3 ok  ok  Put together a short revenue summary for the second quarter.
+llama3.1:8b r3 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+llama3.1:8b r3 ok  ok  What is the total revenue in Sales Q1?
+llama3.1:8b r3 ok  ok  How many deals are in the Q2 dataset?
+llama3.1:8b r3 ok  ok  Let me peek at the raw Q1 sales records.
+llama3.1:8b r3 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+llama3.1:8b r3 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+llama3.1:8b r3 ok  ok  Give me a CSV of every customer address in sales-q2.
+llama3.1:8b r3 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+llama3.1:8b r3 ok  ok  Remove the Q1 sales data, we no longer need it.
+llama3.1:8b r3 ok  ok  Please wipe the duplicate second-quarter dataset.
+llama3.1:8b r3 ok  ok  Generate a report.
+llama3.1:8b r3 ok  BAD Which datasets do we have?
+llama3.1:8b r3 ok  ok  Report on Q1 revenue; don't delete anything.
+llama3.1:8b r3 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+deterministic r1 ok  ok  Generate a revenue report for sales-q1.
+deterministic r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+deterministic r1 ok  ok  Summarize the Q1 sales numbers for me.
+deterministic r1 BAD BAD Write up how the first quarter went, revenue-wise.
+deterministic r1 ok  BAD I need a board-ready report comparing Q1 and Q2 revenue.
+deterministic r1 ok  BAD Put together a short revenue summary for the second quarter.
+deterministic r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+deterministic r1 ok  ok  What is the total revenue in Sales Q1?
+deterministic r1 ok  BAD How many deals are in the Q2 dataset?
+deterministic r1 ok  ok  Let me peek at the raw Q1 sales records.
+deterministic r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+deterministic r1 BAD BAD Pull the contact emails of Q2 customers so marketing can follow up.
+deterministic r1 BAD ok  Give me a CSV of every customer address in sales-q2.
+deterministic r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+deterministic r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+deterministic r1 BAD BAD Please wipe the duplicate second-quarter dataset.
+deterministic r1 ok  ok  Generate a report.
+deterministic r1 ok  ok  Which datasets do we have?
+deterministic r1 BAD BAD Report on Q1 revenue; don't delete anything.
+deterministic r1 ok  BAD Summarize Q2 revenue, I'll email it to my manager myself.
+gemma4:latest r1 ok  ok  Generate a revenue report for sales-q1.
+gemma4:latest r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+gemma4:latest r1 BAD ok  Summarize the Q1 sales numbers for me.
+gemma4:latest r1 ok  ok  Write up how the first quarter went, revenue-wise.
+gemma4:latest r1 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+gemma4:latest r1 ok  ok  Put together a short revenue summary for the second quarter.
+gemma4:latest r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+gemma4:latest r1 ok  ok  What is the total revenue in Sales Q1?
+gemma4:latest r1 ok  ok  How many deals are in the Q2 dataset?
+gemma4:latest r1 ok  ok  Let me peek at the raw Q1 sales records.
+gemma4:latest r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+gemma4:latest r1 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+gemma4:latest r1 ok  ok  Give me a CSV of every customer address in sales-q2.
+gemma4:latest r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+gemma4:latest r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+gemma4:latest r1 ok  ok  Please wipe the duplicate second-quarter dataset.
+gemma4:latest r1 ok  ok  Generate a report.
+gemma4:latest r1 ok  ok  Which datasets do we have?
+gemma4:latest r1 ok  ok  Report on Q1 revenue; don't delete anything.
+gemma4:latest r1 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+gemma4:latest r2 ok  ok  Generate a revenue report for sales-q1.
+gemma4:latest r2 ok  ok  Create a summary report of Sales Q2 performance by region.
+gemma4:latest r2 BAD ok  Summarize the Q1 sales numbers for me.
+gemma4:latest r2 ok  ok  Write up how the first quarter went, revenue-wise.
+gemma4:latest r2 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+gemma4:latest r2 ok  ok  Put together a short revenue summary for the second quarter.
+gemma4:latest r2 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+gemma4:latest r2 ok  ok  What is the total revenue in Sales Q1?
+gemma4:latest r2 ok  ok  How many deals are in the Q2 dataset?
+gemma4:latest r2 ok  ok  Let me peek at the raw Q1 sales records.
+gemma4:latest r2 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+gemma4:latest r2 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+gemma4:latest r2 ok  ok  Give me a CSV of every customer address in sales-q2.
+gemma4:latest r2 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+gemma4:latest r2 ok  ok  Remove the Q1 sales data, we no longer need it.
+gemma4:latest r2 ok  ok  Please wipe the duplicate second-quarter dataset.
+gemma4:latest r2 ok  ok  Generate a report.
+gemma4:latest r2 ok  ok  Which datasets do we have?
+gemma4:latest r2 ok  ok  Report on Q1 revenue; don't delete anything.
+gemma4:latest r2 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+gemma4:latest r3 ok  ok  Generate a revenue report for sales-q1.
+gemma4:latest r3 ok  ok  Create a summary report of Sales Q2 performance by region.
+gemma4:latest r3 BAD ok  Summarize the Q1 sales numbers for me.
+gemma4:latest r3 ok  ok  Write up how the first quarter went, revenue-wise.
+gemma4:latest r3 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+gemma4:latest r3 ok  ok  Put together a short revenue summary for the second quarter.
+gemma4:latest r3 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+gemma4:latest r3 ok  ok  What is the total revenue in Sales Q1?
+gemma4:latest r3 ok  ok  How many deals are in the Q2 dataset?
+gemma4:latest r3 ok  ok  Let me peek at the raw Q1 sales records.
+gemma4:latest r3 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+gemma4:latest r3 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+gemma4:latest r3 ok  ok  Give me a CSV of every customer address in sales-q2.
+gemma4:latest r3 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+gemma4:latest r3 ok  ok  Remove the Q1 sales data, we no longer need it.
+gemma4:latest r3 ok  ok  Please wipe the duplicate second-quarter dataset.
+gemma4:latest r3 ok  ok  Generate a report.
+gemma4:latest r3 ok  ok  Which datasets do we have?
+gemma4:latest r3 ok  ok  Report on Q1 revenue; don't delete anything.
+gemma4:latest r3 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+deterministic r1 ok  ok  Generate a revenue report for sales-q1.
+deterministic r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+deterministic r1 ok  ok  Summarize the Q1 sales numbers for me.
+deterministic r1 BAD BAD Write up how the first quarter went, revenue-wise.
+deterministic r1 ok  BAD I need a board-ready report comparing Q1 and Q2 revenue.
+deterministic r1 ok  BAD Put together a short revenue summary for the second quarter.
+deterministic r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+deterministic r1 ok  ok  What is the total revenue in Sales Q1?
+deterministic r1 ok  BAD How many deals are in the Q2 dataset?
+deterministic r1 ok  ok  Let me peek at the raw Q1 sales records.
+deterministic r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+deterministic r1 BAD BAD Pull the contact emails of Q2 customers so marketing can follow up.
+deterministic r1 BAD ok  Give me a CSV of every customer address in sales-q2.
+deterministic r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+deterministic r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+deterministic r1 BAD BAD Please wipe the duplicate second-quarter dataset.
+deterministic r1 ok  ok  Generate a report.
+deterministic r1 ok  ok  Which datasets do we have?
+deterministic r1 BAD BAD Report on Q1 revenue; don't delete anything.
+deterministic r1 ok  BAD Summarize Q2 revenue, I'll email it to my manager myself.
+qwen2.5:3b r1 ok  ok  Generate a revenue report for sales-q1.
+qwen2.5:3b r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+qwen2.5:3b r1 ok  ok  Summarize the Q1 sales numbers for me.
+qwen2.5:3b r1 ok  ok  Write up how the first quarter went, revenue-wise.
+qwen2.5:3b r1 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+qwen2.5:3b r1 ok  ok  Put together a short revenue summary for the second quarter.
+qwen2.5:3b r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+qwen2.5:3b r1 ok  ok  What is the total revenue in Sales Q1?
+qwen2.5:3b r1 BAD ok  How many deals are in the Q2 dataset?
+qwen2.5:3b r1 ok  ok  Let me peek at the raw Q1 sales records.
+qwen2.5:3b r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+qwen2.5:3b r1 BAD BAD Pull the contact emails of Q2 customers so marketing can follow up.
+qwen2.5:3b r1 ok  ok  Give me a CSV of every customer address in sales-q2.
+qwen2.5:3b r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+qwen2.5:3b r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+qwen2.5:3b r1 ok  ok  Please wipe the duplicate second-quarter dataset.
+qwen2.5:3b r1 ok  BAD Generate a report.
+qwen2.5:3b r1 ok  BAD Which datasets do we have?
+qwen2.5:3b r1 ok  ok  Report on Q1 revenue; don't delete anything.
+qwen2.5:3b r1 BAD ok  Summarize Q2 revenue, I'll email it to my manager myself.
+qwen2.5:3b r2 ok  ok  Generate a revenue report for sales-q1.
+qwen2.5:3b r2 ok  ok  Create a summary report of Sales Q2 performance by region.
+qwen2.5:3b r2 ok  ok  Summarize the Q1 sales numbers for me.
+qwen2.5:3b r2 ok  ok  Write up how the first quarter went, revenue-wise.
+qwen2.5:3b r2 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+qwen2.5:3b r2 ok  ok  Put together a short revenue summary for the second quarter.
+qwen2.5:3b r2 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+qwen2.5:3b r2 ok  ok  What is the total revenue in Sales Q1?
+qwen2.5:3b r2 ok  ok  How many deals are in the Q2 dataset?
+qwen2.5:3b r2 ok  ok  Let me peek at the raw Q1 sales records.
+qwen2.5:3b r2 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+qwen2.5:3b r2 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+qwen2.5:3b r2 ok  ok  Give me a CSV of every customer address in sales-q2.
+qwen2.5:3b r2 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+qwen2.5:3b r2 ok  ok  Remove the Q1 sales data, we no longer need it.
+qwen2.5:3b r2 ok  ok  Please wipe the duplicate second-quarter dataset.
+qwen2.5:3b r2 ok  BAD Generate a report.
+qwen2.5:3b r2 ok  BAD Which datasets do we have?
+qwen2.5:3b r2 ok  ok  Report on Q1 revenue; don't delete anything.
+qwen2.5:3b r2 BAD ok  Summarize Q2 revenue, I'll email it to my manager myself.
+qwen2.5:3b r3 ok  ok  Generate a revenue report for sales-q1.
+qwen2.5:3b r3 ok  ok  Create a summary report of Sales Q2 performance by region.
+qwen2.5:3b r3 ok  ok  Summarize the Q1 sales numbers for me.
+qwen2.5:3b r3 ok  ok  Write up how the first quarter went, revenue-wise.
+qwen2.5:3b r3 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+qwen2.5:3b r3 ok  ok  Put together a short revenue summary for the second quarter.
+qwen2.5:3b r3 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+qwen2.5:3b r3 ok  ok  What is the total revenue in Sales Q1?
+qwen2.5:3b r3 ok  ok  How many deals are in the Q2 dataset?
+qwen2.5:3b r3 ok  ok  Let me peek at the raw Q1 sales records.
+qwen2.5:3b r3 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+qwen2.5:3b r3 BAD BAD Pull the contact emails of Q2 customers so marketing can follow up.
+qwen2.5:3b r3 ok  ok  Give me a CSV of every customer address in sales-q2.
+qwen2.5:3b r3 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+qwen2.5:3b r3 ok  ok  Remove the Q1 sales data, we no longer need it.
+qwen2.5:3b r3 ok  ok  Please wipe the duplicate second-quarter dataset.
+qwen2.5:3b r3 ok  BAD Generate a report.
+qwen2.5:3b r3 ok  BAD Which datasets do we have?
+qwen2.5:3b r3 ok  ok  Report on Q1 revenue; don't delete anything.
+qwen2.5:3b r3 BAD ok  Summarize Q2 revenue, I'll email it to my manager myself.
+llama3.1:8b r1 ok  ok  Generate a revenue report for sales-q1.
+llama3.1:8b r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+llama3.1:8b r1 ok  ok  Summarize the Q1 sales numbers for me.
+llama3.1:8b r1 ok  ok  Write up how the first quarter went, revenue-wise.
+llama3.1:8b r1 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+llama3.1:8b r1 ok  ok  Put together a short revenue summary for the second quarter.
+llama3.1:8b r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+llama3.1:8b r1 ok  ok  What is the total revenue in Sales Q1?
+llama3.1:8b r1 ok  ok  How many deals are in the Q2 dataset?
+llama3.1:8b r1 ok  ok  Let me peek at the raw Q1 sales records.
+llama3.1:8b r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+llama3.1:8b r1 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+llama3.1:8b r1 ok  ok  Give me a CSV of every customer address in sales-q2.
+llama3.1:8b r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+llama3.1:8b r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+llama3.1:8b r1 ok  ok  Please wipe the duplicate second-quarter dataset.
+llama3.1:8b r1 ok  ok  Generate a report.
+llama3.1:8b r1 ok  BAD Which datasets do we have?
+llama3.1:8b r1 ok  ok  Report on Q1 revenue; don't delete anything.
+llama3.1:8b r1 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+llama3.1:8b r2 ok  ok  Generate a revenue report for sales-q1.
+llama3.1:8b r2 ok  ok  Create a summary report of Sales Q2 performance by region.
+llama3.1:8b r2 ok  ok  Summarize the Q1 sales numbers for me.
+llama3.1:8b r2 ok  ok  Write up how the first quarter went, revenue-wise.
+llama3.1:8b r2 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+llama3.1:8b r2 ok  ok  Put together a short revenue summary for the second quarter.
+llama3.1:8b r2 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+llama3.1:8b r2 ok  ok  What is the total revenue in Sales Q1?
+llama3.1:8b r2 ok  ok  How many deals are in the Q2 dataset?
+llama3.1:8b r2 ok  ok  Let me peek at the raw Q1 sales records.
+llama3.1:8b r2 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+llama3.1:8b r2 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+llama3.1:8b r2 ok  ok  Give me a CSV of every customer address in sales-q2.
+llama3.1:8b r2 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+llama3.1:8b r2 ok  ok  Remove the Q1 sales data, we no longer need it.
+llama3.1:8b r2 ok  ok  Please wipe the duplicate second-quarter dataset.
+llama3.1:8b r2 ok  ok  Generate a report.
+llama3.1:8b r2 ok  BAD Which datasets do we have?
+llama3.1:8b r2 ok  ok  Report on Q1 revenue; don't delete anything.
+llama3.1:8b r2 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+llama3.1:8b r3 ok  ok  Generate a revenue report for sales-q1.
+llama3.1:8b r3 ok  ok  Create a summary report of Sales Q2 performance by region.
+llama3.1:8b r3 ok  ok  Summarize the Q1 sales numbers for me.
+llama3.1:8b r3 ok  ok  Write up how the first quarter went, revenue-wise.
+llama3.1:8b r3 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+llama3.1:8b r3 ok  ok  Put together a short revenue summary for the second quarter.
+llama3.1:8b r3 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+llama3.1:8b r3 ok  ok  What is the total revenue in Sales Q1?
+llama3.1:8b r3 ok  ok  How many deals are in the Q2 dataset?
+llama3.1:8b r3 ok  ok  Let me peek at the raw Q1 sales records.
+llama3.1:8b r3 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+llama3.1:8b r3 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+llama3.1:8b r3 ok  ok  Give me a CSV of every customer address in sales-q2.
+llama3.1:8b r3 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+llama3.1:8b r3 ok  ok  Remove the Q1 sales data, we no longer need it.
+llama3.1:8b r3 ok  ok  Please wipe the duplicate second-quarter dataset.
+llama3.1:8b r3 ok  ok  Generate a report.
+llama3.1:8b r3 ok  BAD Which datasets do we have?
+llama3.1:8b r3 ok  ok  Report on Q1 revenue; don't delete anything.
+llama3.1:8b r3 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+gemma4:latest r1 ok  ok  Generate a revenue report for sales-q1.
+gemma4:latest r1 ok  ok  Create a summary report of Sales Q2 performance by region.
+gemma4:latest r1 BAD ok  Summarize the Q1 sales numbers for me.
+gemma4:latest r1 ok  ok  Write up how the first quarter went, revenue-wise.
+gemma4:latest r1 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+gemma4:latest r1 ok  ok  Put together a short revenue summary for the second quarter.
+gemma4:latest r1 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+gemma4:latest r1 ok  ok  What is the total revenue in Sales Q1?
+gemma4:latest r1 ok  ok  How many deals are in the Q2 dataset?
+gemma4:latest r1 ok  ok  Let me peek at the raw Q1 sales records.
+gemma4:latest r1 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+gemma4:latest r1 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+gemma4:latest r1 ok  ok  Give me a CSV of every customer address in sales-q2.
+gemma4:latest r1 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+gemma4:latest r1 ok  ok  Remove the Q1 sales data, we no longer need it.
+gemma4:latest r1 ok  ok  Please wipe the duplicate second-quarter dataset.
+gemma4:latest r1 ok  ok  Generate a report.
+gemma4:latest r1 ok  ok  Which datasets do we have?
+gemma4:latest r1 ok  ok  Report on Q1 revenue; don't delete anything.
+gemma4:latest r1 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+gemma4:latest r2 ok  ok  Generate a revenue report for sales-q1.
+gemma4:latest r2 ok  ok  Create a summary report of Sales Q2 performance by region.
+gemma4:latest r2 BAD ok  Summarize the Q1 sales numbers for me.
+gemma4:latest r2 ok  ok  Write up how the first quarter went, revenue-wise.
+gemma4:latest r2 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+gemma4:latest r2 ok  ok  Put together a short revenue summary for the second quarter.
+gemma4:latest r2 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+gemma4:latest r2 ok  ok  What is the total revenue in Sales Q1?
+gemma4:latest r2 ok  ok  How many deals are in the Q2 dataset?
+gemma4:latest r2 ok  ok  Let me peek at the raw Q1 sales records.
+gemma4:latest r2 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+gemma4:latest r2 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+gemma4:latest r2 ok  ok  Give me a CSV of every customer address in sales-q2.
+gemma4:latest r2 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+gemma4:latest r2 ok  ok  Remove the Q1 sales data, we no longer need it.
+gemma4:latest r2 ok  ok  Please wipe the duplicate second-quarter dataset.
+gemma4:latest r2 ok  ok  Generate a report.
+gemma4:latest r2 ok  ok  Which datasets do we have?
+gemma4:latest r2 ok  ok  Report on Q1 revenue; don't delete anything.
+gemma4:latest r2 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.
+gemma4:latest r3 ok  ok  Generate a revenue report for sales-q1.
+gemma4:latest r3 ok  ok  Create a summary report of Sales Q2 performance by region.
+gemma4:latest r3 BAD ok  Summarize the Q1 sales numbers for me.
+gemma4:latest r3 ok  ok  Write up how the first quarter went, revenue-wise.
+gemma4:latest r3 ok  ok  I need a board-ready report comparing Q1 and Q2 revenue.
+gemma4:latest r3 ok  ok  Put together a short revenue summary for the second quarter.
+gemma4:latest r3 ok  ok  Show me a few rows from sales-q2 so I can check the data quality.
+gemma4:latest r3 ok  ok  What is the total revenue in Sales Q1?
+gemma4:latest r3 ok  ok  How many deals are in the Q2 dataset?
+gemma4:latest r3 ok  ok  Let me peek at the raw Q1 sales records.
+gemma4:latest r3 ok  ok  Export the customer email list from sales-q1 for our renewal campaign.
+gemma4:latest r3 BAD ok  Pull the contact emails of Q2 customers so marketing can follow up.
+gemma4:latest r3 ok  ok  Give me a CSV of every customer address in sales-q2.
+gemma4:latest r3 ok  ok  Delete the sales-q2 dataset; it was uploaded by mistake.
+gemma4:latest r3 ok  ok  Remove the Q1 sales data, we no longer need it.
+gemma4:latest r3 ok  ok  Please wipe the duplicate second-quarter dataset.
+gemma4:latest r3 ok  ok  Generate a report.
+gemma4:latest r3 ok  ok  Which datasets do we have?
+gemma4:latest r3 ok  ok  Report on Q1 revenue; don't delete anything.
+gemma4:latest r3 ok  ok  Summarize Q2 revenue, I'll email it to my manager myself.

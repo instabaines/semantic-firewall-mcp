@@ -1,0 +1,126 @@
+{
+  "ranAt": "2026-10-19T01:56:21.945Z",
+  "trialsPerAttack": 5,
+  "results": [
+    {
+      "target": "fixed",
+      "id": "X1",
+      "name": "Agent mints its own passport with broad scopes",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "mint refused (401)"
+    },
+    {
+      "target": "fixed",
+      "id": "X2",
+      "name": "Forged passport (HS256, published default secret)",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 403"
+    },
+    {
+      "target": "fixed",
+      "id": "X3",
+      "name": "Unsigned passport (alg=none) [control]",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 403"
+    },
+    {
+      "target": "fixed",
+      "id": "X4",
+      "name": "JSON-RPC batch smuggling past the policy layer",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 400 {\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":400,\"message\":\"Expected a single JSON-RPC request object\",\"data\":{\"reason\":\"m"
+    },
+    {
+      "target": "fixed",
+      "id": "X5",
+      "name": "resources/read of an unbound resource",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 403"
+    },
+    {
+      "target": "fixed",
+      "id": "X6",
+      "name": "Agent approves its own held request",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "decision 401; call 403"
+    },
+    {
+      "target": "fixed",
+      "id": "X7",
+      "name": "Inspector outage fails open (REQUIRE_MODEL=1, model down)",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 503"
+    },
+    {
+      "target": "fixed",
+      "id": "X8",
+      "name": "Stolen passport sent directly to the protected server [control]",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 401"
+    },
+    {
+      "target": "fixed",
+      "id": "X9",
+      "name": "Captured DPoP proof replayed with an out-of-scope call",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "original 200; replay 401"
+    },
+    {
+      "target": "fixed",
+      "id": "X12",
+      "name": "Proof made for one call used first with a different in-scope call",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "substituted call 401"
+    },
+    {
+      "target": "fixed",
+      "id": "X10",
+      "name": "Passport with no bound resources reaches any dataset",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 403"
+    },
+    {
+      "target": "fixed",
+      "id": "X11",
+      "name": "Approval dashboard renders agent-controlled text as HTML",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "escapes=true; csp=yes (static check)"
+    }
+  ]
+}

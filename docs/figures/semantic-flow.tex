@@ -1,0 +1,86 @@
+% Semantic enforcement flow (TikZ). Requires: tikz with arrows.meta, calc, backgrounds.
+% Build the PNG with docs/build-figures.sh.
+\definecolor{sfTrusted}{HTML}{E8F5E9}
+\definecolor{sfUntrusted}{HTML}{FDECEA}
+\definecolor{sfEnforce}{HTML}{E8EEFA}
+\definecolor{sfResource}{HTML}{EAF7F2}
+\definecolor{sfPhase}{HTML}{FFF4CC}
+\definecolor{sfPhaseLine}{HTML}{E0B800}
+\definecolor{sfDeny}{HTML}{B3261E}
+\begin{tikzpicture}[y=0.84cm,
+  font=\footnotesize,
+  >={Latex[length=2mm]},
+  lane/.style={draw, rounded corners=2pt, align=center, minimum width=22mm, minimum height=9mm, inner sep=2pt, fill=white, font=\footnotesize\bfseries},
+  msg/.style={->, thick},
+  ret/.style={->, thick, dashed},
+  deny/.style={->, thick, dashed, sfDeny},
+  lbl/.style={fill=white, inner sep=1.2pt, font=\scriptsize, align=center},
+  num/.style={circle, fill=black, text=white, inner sep=0.6pt, minimum size=3.6mm, font=\tiny\bfseries},
+  phase/.style={fill=sfPhase, draw=sfPhaseLine, rounded corners=1pt, font=\scriptsize\bfseries},
+  act/.style={draw, rounded corners=1.5pt, fill=white, align=center, font=\scriptsize, inner sep=2.5pt},
+]
+% lane positions
+\def\xU{0}\def\xI{2.9}\def\xA{5.9}\def\xP{9.3}\def\xN{12.5}\def\xH{15.0}\def\xS{17.7}
+\def\ytop{0}\def\ybot{-14.6}
+
+% trust zones (background)
+\begin{scope}[on background layer]
+  \fill[sfTrusted]   (\xU-1.25,\ytop+1.15) rectangle (\xI+1.25,\ybot-0.2);
+  \fill[sfUntrusted] (\xA-1.25,\ytop+1.15) rectangle (\xA+1.25,\ybot-0.2);
+  \fill[sfEnforce]   (\xP-1.25,\ytop+1.15) rectangle (\xH+1.25,\ybot-0.2);
+  \fill[sfResource]  (\xS-1.25,\ytop+1.15) rectangle (\xS+1.25,\ybot-0.2);
+\end{scope}
+\node[font=\scriptsize\itshape] at ({(\xU+\xI)/2},\ytop+0.85) {trusted: holds $c$, $sk_I$};
+\node[font=\scriptsize\itshape, text=sfDeny] at (\xA,\ytop+0.85) {untrusted};
+\node[font=\scriptsize\itshape] at ({(\xP+\xH)/2},\ytop+0.85) {enforcement layer: holds $sk_P$, $a$};
+\node[font=\scriptsize\itshape] at (\xS,\ytop+0.85) {protected resource};
+
+% lanes and lifelines
+\foreach \x/\name in {\xU/{User +\\trusted client}, \xI/{Intent\\issuer}, \xA/{Agent\\(LLM)}, \xP/{Semantic\\proxy (PEP)}, \xN/{Inspector\\(rules $\lor$ model)}, \xH/{Human\\approver}, \xS/{MCP server\\(tools)}} {
+  \draw[gray!70, thick] (\x,\ytop-0.45) -- (\x,\ybot);
+  \node[lane] at (\x,\ytop) {\name};
+}
+
+% ---------------- Phase 1
+\node[phase, minimum width=19.6cm, minimum height=4.6mm] at ({(\xU+\xS)/2},-1.05) {Phase 1: Contextual binding};
+\draw[msg] (\xU,-1.75) -- node[lbl, pos=0, anchor=south west, xshift=0.5mm, yshift=0.5pt] {``Generate a revenue report for sales-q1'' + $c$} (\xI,-1.75);
+\node[num] at (\xU-0.35,-1.75) {1};
+\node[act, anchor=west] (sign) at (\xI+0.15,-2.45) {derive intent $t$, scopes $S$, resources $R$;\\ sign passport $\pi$ with $sk_I$};
+\node[num] at (\xI-0.35,-2.45) {2};
+\draw[msg] (\xI,-3.25) -- node[lbl, pos=0, anchor=south west, xshift=0.5mm, yshift=0.5pt] {$\pi$ = intent, $S$, $R$, audience, \texttt{cnf.jkt}, expiry} (\xA,-3.25);
+\node[num] at (\xI-0.35,-3.25) {3};
+
+% ---------------- Phase 2
+\node[phase, minimum width=19.6cm, minimum height=4.6mm] at ({(\xU+\xS)/2},-3.95) {Phase 2: Goal hijack};
+\node[act, draw=sfDeny, text=sfDeny] at (\xA,-4.5) {reads injected data};
+\draw[msg] (\xA,-5.55) -- node[lbl, pos=0, anchor=south west, xshift=0.5mm, yshift=0.5pt, align=left] {\texttt{tools/call} + $\pi$:\\ \texttt{generate\_report(sales-q1, "\ldots send to ext@\ldots")}} (\xP,-5.55);
+\node[num] at (\xA-0.35,-5.55) {4};
+
+% ---------------- Phase 3
+\node[phase, minimum width=19.6cm, minimum height=4.6mm] at ({(\xU+\xS)/2},-6.05) {Phase 3: Mediation (deterministic, then semantic, then human)};
+\node[act, anchor=west, align=left] (det) at (\xP+0.2,-6.95) {verify $\pi$ $\cdot$ one request $\cdot$ method allowlist\\ tool $\in S$ $\cdot$ resources $\subseteq R$ \hfill \textcolor{sfDeny}{fail $\Rightarrow$ deny}};
+\node[num] at (\xP-0.35,-6.95) {5};
+\draw[msg] (\xP,-7.85) -- node[lbl, above=0.5pt] {call, intent, session history} (\xN,-7.85);
+\node[num] at (\xP-0.35,-7.85) {6};
+\draw[ret] (\xN,-8.45) -- node[lbl, above=0.5pt] {verdict $(v, c)$; error $\Rightarrow$ deny} (\xP,-8.45);
+\node[num] at (\xN+0.35,-8.45) {7};
+% alternatives
+\draw[gray!80, rounded corners=1pt] (\xA-1.1,-8.95) rectangle (\xH+1.1,-11.45);
+\node[anchor=north west, font=\scriptsize\bfseries, fill=white, draw=gray!80, inner sep=1.5pt] at (\xA-1.1,-8.95) {alt};
+\node[anchor=west, font=\scriptsize\itshape] at (\xA-0.95,-9.45) {[violation, low-risk tool]};
+\draw[deny] (\xP,-9.7) -- node[lbl, below=0.5pt, text=sfDeny] {403: blocked, server never reached} (\xA,-9.7);
+\draw[gray!80, dashed] (\xA-1.1,-10.05) -- (\xH+1.1,-10.05);
+\node[anchor=west, font=\scriptsize\itshape] at (\xA-0.95,-10.35) {[violation, high-risk tool]};
+\draw[msg] (\xP,-10.6) -- node[lbl, above=0.5pt] {held call (escaped console)} (\xH,-10.6);
+\draw[ret] (\xH,-11.15) -- node[lbl, above=0.5pt] {decision, authenticated with $a$} (\xP,-11.15);
+\node[num] at (\xP-0.35,-10.6) {8};
+
+% ---------------- Phase 4
+\node[phase, minimum width=19.6cm, minimum height=4.6mm] at ({(\xU+\xS)/2},-11.95) {Phase 4: Sender-constrained forwarding};
+\draw[msg] (\xP,-12.65) -- node[lbl, above=0.5pt] {call + $\pi$ + proof ($sk_P$; method, URL, token, body)} (\xS,-12.65);
+\node[num] at (\xP-0.35,-12.65) {9};
+\node[act, anchor=east, align=right] at (\xS-0.2,-13.4) {verify $\pi$ and proof; unseen \texttt{jti};\\ re-check tool $\in S$, resources $\subseteq R$};
+\node[num] at (\xS+0.38,-13.4) {10};
+\draw[ret] (\xS,-14.15) -- node[lbl, above=0.5pt] {result (allowed calls only)} (\xA,-14.15);
+\node[num] at (\xS+0.38,-14.15) {11};
+\end{tikzpicture}

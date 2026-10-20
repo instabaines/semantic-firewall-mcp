@@ -1,0 +1,14 @@
+label,config,model,asr_sem,benign_pass
+C0,C0,none,100.0,100.0
+C1,C1,none,100.0,97.1
+C2,C2,none,100.0,97.1
+C3,C3,none,8.3,85.3
+C4\,Q,C4,qwen2.5:3b,72.2,84.3
+C4\,L,C4,llama3.1:8b,0.0,2.9
+C4\,G,C4,gemma4:latest,31.9,91.2
+C5\,Q,C5,qwen2.5:3b,4.2,82.4
+C5\,L,C5,llama3.1:8b,0.0,88.2
+C5\,G,C5,gemma4:latest,0.0,82.4
+C6\,Q,C6,qwen2.5:3b,0.0,76.5
+C6\,L,C6,llama3.1:8b,0.0,82.4
+C6\,G,C6,gemma4:latest,0.0,79.4

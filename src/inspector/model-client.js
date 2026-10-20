@@ -118,6 +118,7 @@ function extractJsonCandidate(text) {
 export async function generateJsonWithModel({
   config,
   prompt,
+  system,
   model = config.ollamaModel,
   maxTokens = 300,
 }) {
@@ -131,13 +132,19 @@ export async function generateJsonWithModel({
     body: JSON.stringify({
       model,
       prompt,
+      ...(system ? { system } : {}),
       format: "json",
       stream: false,
+      // Reasoning models (e.g. gemma4, qwen3) otherwise spend the token budget thinking.
+      think: false,
       options: {
         num_predict: maxTokens,
-        temperature: 0.1,
+        temperature: config.modelTemperature ?? 0.1,
+        ...(Number.isFinite(config.modelSeed) ? { seed: config.modelSeed } : {}),
       },
     }),
+    headersTimeout: config.inspectorTimeoutMs,
+    bodyTimeout: config.inspectorTimeoutMs,
   });
 
   if (response.statusCode >= 400) {

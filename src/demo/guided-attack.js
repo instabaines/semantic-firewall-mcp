@@ -11,7 +11,8 @@ const ports = {
 async function createPassport(prompt, extra = {}) {
   const response = await request(`http://127.0.0.1:${ports.orchestratorPort}/intent-passports`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    // The demo plays the trusted user front end here; a real agent never holds this credential.
+    headers: { "content-type": "application/json", authorization: `Bearer ${config.orchestratorClientToken}` },
     body: JSON.stringify({ prompt, ...extra }),
   });
 
@@ -48,7 +49,8 @@ async function listApprovals() {
 async function approve(id) {
   await request(`http://127.0.0.1:${ports.proxyPort}/approvals/${id}/decision`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    // The demo plays the human approver here.
+    headers: { "content-type": "application/json", "x-approver-token": config.approverToken },
     body: JSON.stringify({ approved: true, approver: "guided-attack-script" }),
   });
 }

@@ -1,0 +1,12 @@
+{
+  "ranAt": "2026-10-19T03:29:24.937Z",
+  "ollamaUrl": "http://<gpu-host>:11434/api/generate",
+  "args": {
+    "models": [
+      "qwen2.5:3b",
+      "llama3.1:8b",
+      "gemma4:latest"
+    ],
+    "reps": 3
+  }
+}

@@ -1,0 +1,12 @@
+fixed X1 0/5 succeeded (0 invalid) - mint refused (401)
+fixed X2 0/5 succeeded (0 invalid) - call 403
+fixed X3 0/5 succeeded (0 invalid) - call 403
+fixed X4 0/5 succeeded (0 invalid) - call 400 {"jsonrpc":"2.0","id":null,"error":{"code":400,"message":"Expected a single JSON-RPC request object","data":{"reason":"m
+fixed X5 0/5 succeeded (0 invalid) - call 403
+fixed X6 0/5 succeeded (0 invalid) - decision 401; call 403
+fixed X7 0/5 succeeded (0 invalid) - call 503
+fixed X8 0/5 succeeded (0 invalid) - call 401
+fixed X9 0/5 succeeded (0 invalid) - original 200; replay 401
+fixed X12 0/5 succeeded (0 invalid) - substituted call 401
+fixed X10 0/5 succeeded (0 invalid) - call 403
+fixed X11 0/5 succeeded (0 invalid) - escapes=true; csp=yes (static check)

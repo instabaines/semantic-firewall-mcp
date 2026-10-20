@@ -1,11 +1,13 @@
 import { extractIntentToken, verifyIntentPassport } from "../protocol/contextual-passport.js";
-import { verifyDpopProof } from "../protocol/sender-constrained.js";
+import { DpopReplayCache, verifyDpopProof } from "../protocol/sender-constrained.js";
+
+const defaultReplayCache = new DpopReplayCache();
 
 function protectedResourceUrl(config) {
   return `http://127.0.0.1:${config.protectedPort}/mcp`;
 }
 
-export function verifyProtectedResourceRequest({ config, request }) {
+export function verifyProtectedResourceRequest({ config, request, replayCache = defaultReplayCache }) {
   const accessToken = extractIntentToken(request);
   if (!accessToken) {
     throw new Error("Missing passport token");
@@ -34,6 +36,8 @@ export function verifyProtectedResourceRequest({ config, request }) {
     method: request.method,
     url: protectedResourceUrl(config),
     expectedThumbprint: passport.cnf.jkt,
+    replayCache,
+    body: request.rawBody,
   });
 
   return {

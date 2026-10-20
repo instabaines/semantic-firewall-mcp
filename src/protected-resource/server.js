@@ -14,6 +14,7 @@ import {
 } from "./demo-db.js";
 import { eventBus } from "../dashboard/event-bus.js";
 import { verifyProtectedResourceRequest } from "./auth.js";
+import { checkResourceBinding, checkResourceReadBinding, checkToolScope } from "../semantic-proxy/policy-engine.js";
 
 function renderReportMarkdown(dataset, overview, objective, rows) {
   const topRegions = [...rows]
@@ -186,7 +187,18 @@ function buildMcpServer(config) {
 
 // Diagram box: Protected MCP Server / Tools
 export function buildProtectedServer(config) {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: { level: config.logLevel } });
+
+  // Keep the exact request bytes: the proof's body hash is checked against them.
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (request, raw, done) => {
+    request.rawBody = raw;
+    try {
+      done(null, JSON.parse(raw));
+    } catch (error) {
+      error.statusCode = 400;
+      done(error);
+    }
+  });
 
   app.post("/mcp", async (request, reply) => {
     let authContext;
@@ -200,6 +212,28 @@ export function buildProtectedServer(config) {
           code: 401,
           message: error.message,
         },
+      });
+    }
+
+    // Defense in depth: the resource server re-checks scope and resource binding
+    // from the passport, so a proxy misconfiguration cannot widen access.
+    const rpc = request.body;
+    const passport = authContext.passport;
+    const scopeError = Array.isArray(rpc)
+      ? "Batch requests are not accepted"
+      : rpc?.method === "tools/call" && !checkToolScope(passport, rpc.params?.name)
+        ? "Tool outside passport scope"
+        : rpc?.method === "tools/call" && !checkResourceBinding(passport, { name: rpc.params?.name, arguments: rpc.params?.arguments || {} })
+          ? "Resource outside passport binding"
+          : rpc?.method === "resources/read" && !checkResourceReadBinding(passport, rpc.params?.uri)
+            ? "Resource outside passport binding"
+            : null;
+    if (scopeError) {
+      eventBus.publish("resource.denied", { reason: scopeError });
+      return reply.code(403).send({
+        jsonrpc: "2.0",
+        id: Array.isArray(rpc) ? null : rpc?.id ?? null,
+        error: { code: 403, message: scopeError },
       });
     }
 

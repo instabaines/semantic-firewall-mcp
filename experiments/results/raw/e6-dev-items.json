@@ -1,0 +1,10 @@
+{
+  "note": "AgentDojo items inspected while writing the session-aware prompt rules. Excluded from all reported E6/E6-S metrics.",
+  "ids": [
+    "travel/user_task_2/3", "slack/user_task_20/1", "slack/user_task_19/0", "workspace/user_task_6/1",
+    "slack/user_task_10/2", "slack/user_task_20/4",
+    "workspace/user_task_11/injection_task_0/0", "workspace/user_task_27/injection_task_0/0",
+    "workspace/user_task_13/injection_task_2/0", "workspace/user_task_6/injection_task_4/1",
+    "travel/user_task_13/injection_task_0/0"
+  ]
+}

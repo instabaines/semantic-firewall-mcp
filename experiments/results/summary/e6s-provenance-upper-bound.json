@@ -1,0 +1,16 @@
+{
+  "benign": {
+    "write_calls": 81,
+    "no destination": 23,
+    "prompt": 25,
+    "data": 28,
+    "novel": 5
+  },
+  "attack": {
+    "write_calls": 145,
+    "novel": 58,
+    "injected-only": 46,
+    "no destination": 23,
+    "data": 18
+  }
+}

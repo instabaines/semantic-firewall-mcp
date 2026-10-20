@@ -1,0 +1,126 @@
+{
+  "ranAt": "2026-10-19T01:55:25.000Z",
+  "trialsPerAttack": 5,
+  "results": [
+    {
+      "target": "legacy",
+      "id": "X1",
+      "name": "Agent mints its own passport with broad scopes",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "mint 200; call 200"
+    },
+    {
+      "target": "legacy",
+      "id": "X2",
+      "name": "Forged passport (HS256, published default secret)",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 200"
+    },
+    {
+      "target": "legacy",
+      "id": "X3",
+      "name": "Unsigned passport (alg=none) [control]",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 403"
+    },
+    {
+      "target": "legacy",
+      "id": "X4",
+      "name": "JSON-RPC batch smuggling past the policy layer",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 200 {\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"Dataset sales-q2 deleted.\"}],\"structuredContent\":{\"datasetId\":\"sales-q2\",\"d"
+    },
+    {
+      "target": "legacy",
+      "id": "X5",
+      "name": "resources/read of an unbound resource",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 200"
+    },
+    {
+      "target": "legacy",
+      "id": "X6",
+      "name": "Agent approves its own held request",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "decision 200; call 200"
+    },
+    {
+      "target": "legacy",
+      "id": "X7",
+      "name": "Inspector outage fails open (REQUIRE_MODEL=1, model down)",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 200"
+    },
+    {
+      "target": "legacy",
+      "id": "X8",
+      "name": "Stolen passport sent directly to the protected server [control]",
+      "success": false,
+      "successes": 0,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 401"
+    },
+    {
+      "target": "legacy",
+      "id": "X9",
+      "name": "Captured DPoP proof replayed with an out-of-scope call",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "original 200; replay 200"
+    },
+    {
+      "target": "legacy",
+      "id": "X12",
+      "name": "Proof made for one call used first with a different in-scope call",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "substituted call 200"
+    },
+    {
+      "target": "legacy",
+      "id": "X10",
+      "name": "Passport with no bound resources reaches any dataset",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "call 200"
+    },
+    {
+      "target": "legacy",
+      "id": "X11",
+      "name": "Approval dashboard renders agent-controlled text as HTML",
+      "success": true,
+      "successes": 5,
+      "trials": 5,
+      "invalidTrials": 0,
+      "evidence": "escapes=false; csp=no (static check)"
+    }
+  ]
+}

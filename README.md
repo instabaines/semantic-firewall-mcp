@@ -1,498 +1,160 @@
-# Hardened MCP Gateway
+# Semantic Firewall for MCP
 
-Hardened MCP Gateway is a demonstration system for enforcing user intent across MCP tool calls.
+Intent-bound authorization for Model Context Protocol (MCP) tool calls: a reference
+implementation, a benchmark corpus, and a reproducible evaluation.
 
 ![Semantic enforcement flow](docs/semantic-enforcement-flow.png)
 
-The architecture image referenced above should be stored at `docs/semantic-enforcement-flow.png`.
+Most MCP authorization asks *"is this agent allowed to call this tool?"*. This
+project asks a stricter question:
 
-Instead of asking only whether an agent is authorized to call a tool, this project asks a stricter question:
+> **Should this tool call happen right now, given what the user actually asked for?**
 
-`Should this tool call happen right now, given the user's original request?`
+The motivating attack is **right intent, malicious action**: the user's request is
+legitimate and the agent holds a legitimately issued credential, but the agent has
+been steered (for example, by prompt injection hidden in a file it read) into a
+call the user never wanted, such as deleting a dataset, exporting customer emails,
+or mailing a report to an outside address.
 
-The demo is designed for security presentations, architecture reviews, and proof-of-concept work around:
+- **Findings and fixes:** [`docs/SECURITY_FINDINGS.md`](docs/SECURITY_FINDINGS.md)
+- **Reproducing the results:** [`experiments/README.md`](experiments/README.md)
 
-- semantic policy enforcement for MCP
-- intent-bound tool access
-- resource binding for agent actions
-- local-model inspection of suspicious tool use
-- human approval for high-risk but technically authorized actions
+## How it works
 
-## Quick Start
+| Component | Code | Role |
+|-----------|------|------|
+| Intent issuer ("orchestrator") | `src/orchestrator/` | Trusted. Accepts the user's prompt from the trusted client, summarizes intent, and signs a **Contextual Passport** (ES256 JWT) carrying intent summary, tool scopes, resource indicators, audience, and a `cnf.jkt` sender constraint. |
+| Agent | (any MCP client) | **Untrusted.** Receives the passport, never the issuer credential. |
+| Semantic proxy (PEP) | `src/semantic-proxy/` | Verifies the passport, then for each JSON-RPC request: method allowlist → tool scope → resource binding → inspector verdict → allow / human approval / block. Forwards with a DPoP-style proof. |
+| Inspector | `src/inspector/` | Judges whether the call matches the intent: deterministic rules (injection, exfiltration, destructive, sensitive data), a local model with a hardened prompt, or both OR-combined. |
+| Protected MCP server | `src/protected-resource/` | Official MCP SDK server over Streamable HTTP. Re-verifies passport, audience, DPoP proof (with replay cache), and re-checks scope and binding. |
+| Dashboard | `public/`, `src/dashboard/` | Live events, approvals (approver token required), reports. |
 
-For the simplest manual run:
+Decision policy (`decideOnVerdict` in `src/semantic-proxy/server.js`):
 
-1. Install dependencies:
+- inspector reports no violation, or confidence below `VIOLATION_THRESHOLD` → **allow**
+- violation on a high-risk tool (`export_customer_emails`, `delete_dataset`) → **hold for human approval**
+- violation on another tool, confidence ≥ `AUTO_BLOCK_THRESHOLD` → **block**, otherwise hold
+- inspector unavailable or malformed verdict → **deny** (fail closed)
 
-```bash
-npm install
-```
+## Quick start
 
-2. Start the stack:
-
-```bash
-OLLAMA_HOST=127.0.0.1:11434 OLLAMA_MODEL=qwen3-vl:8b npm start
-```
-
-3. Open the dashboard:
-
-```text
-http://127.0.0.1:4000/dashboard/
-```
-
-4. In a second terminal, run a scenario:
+Requirements: Node.js 20+, npm, and optionally an Ollama host with a local model.
 
 ```bash
-npm run demo:allow
+npm ci
+OLLAMA_MODEL=qwen2.5:3b npm start
 ```
 
-For a talk or rehearsal, the recommended path is:
+The stack prints an **approver token** at startup. Open
+`http://127.0.0.1:4000/dashboard/` and paste the token when you first approve or deny.
+
+In a second terminal:
 
 ```bash
-PRESENTER_AUTO_RUN=0 npm run presenter
+npm run demo:allow     # in-intent report on sales-q1 → executes
+npm run demo:block     # delete_dataset under a report intent → blocked (scope)
+npm run demo:approve   # user-granted export, off-intent → held, approved by the demo "human"
+npm run demo:guided    # narrated version of the whole story
 ```
 
-Then open:
-
-```text
-http://127.0.0.1:4500/dashboard/
-```
-
-And trigger scenarios manually from another terminal:
+For a talk, use presenter mode on separate ports:
 
 ```bash
-npm run demo:allow
-npm run demo:block
-npm run demo:approve
+PRESENTER_AUTO_RUN=0 npm run presenter   # dashboard on :4500
 ```
 
-If the model host is unavailable or unstable, omit `REQUIRE_MODEL=1` so the demo can fall back instead of failing closed during setup.
-
-## Demo Story
-
-The three primary scenarios are:
-
-- `demo:allow`
-  A normal report-generation request that should pass end to end and create a report.
-- `demo:block`
-  A request that violates resource binding and should be blocked by the proxy before the protected MCP server is reached.
-- `demo:approve`
-  A suspicious but technically authorized request that should pause for human approval.
-
-When the demo is working, the dashboard should show:
-
-- a growing event timeline
-- new reports after successful `generate_report` calls
-- temporary approval items during approval-gated flows
-- the active audience, sender thumbprint, and last request verification state
-
-## Overview
-
-The system contains five cooperating components:
-
-1. An `Orchestrator` that receives the original user prompt and issues a signed Contextual Passport JWT.
-2. A `Semantic Proxy` that intercepts MCP JSON-RPC tool calls before they reach the protected MCP server.
-3. An `Inspector` that evaluates whether the attempted tool action still aligns with the original user intent.
-4. A `Protected MCP Server` that exposes real typed tools backed by a SQLite demo dataset.
-5. A `Dashboard` that shows live events, approvals, reports, and the current runtime configuration.
-
-The current implementation is intended to be honest, runnable, and inspectable. It includes real enforcement logic, a real MCP server, real database-backed tools, and a live demo UI.
-
-## Architecture
-
-### Contextual Passport
-
-When the orchestrator receives the original prompt, it creates a signed JWT with claims such as:
-
-- `summary`
-- `intent_type`
-- `tool_scopes`
-- `resource_indicators`
-- `rationale`
-- `aud`
-- `cnf.jkt`
-- JWT timing claims
-
-The passport is audience-bound to the protected resource server and sender-constrained to the proxy's proof-of-possession key.
-
-Relevant files:
-
-- `src/orchestrator/server.js`
-- `src/orchestrator/semantic-summary.js`
-- `src/protocol/contextual-passport.js`
-
-### Semantic Proxy
-
-The proxy intercepts MCP requests at `POST /mcp` and enforces:
-
-- JWT verification
-- audience binding
-- tool scope checks
-- resource binding checks
-- semantic inspection
-- human approval for suspicious calls
-
-When forwarding to the protected MCP server, the proxy attaches a DPoP-style proof signed with its private key. The protected server verifies both the passport and the proof before executing any tool.
-
-Relevant files:
-
-- `src/semantic-proxy/server.js`
-- `src/semantic-proxy/policy-engine.js`
-- `src/semantic-proxy/approval-gate.js`
-- `src/semantic-proxy/inspector-client.js`
-
-### Inspector
-
-The inspector evaluates whether a tool call is consistent with the original intent summary.
-
-When a model is available, it uses Ollama-style `POST /api/generate`. If `REQUIRE_MODEL=1` is set, failures in model-backed summarization or inspection are treated as hard failures rather than falling back silently.
-
-Relevant files:
-
-- `src/inspector/server.js`
-- `src/inspector/model-client.js`
-
-### Protected MCP Server
-
-The protected server uses the official MCP SDK and exposes real tools over Streamable HTTP.
-
-Before serving any MCP request, it verifies:
-
-- the passport signature
-- the expected audience
-- the sender-constrained `cnf.jkt` binding
-- the accompanying DPoP proof
-
-Tools currently included:
-
-- `list_datasets`
-- `get_dataset_overview`
-- `read_dataset_rows`
-- `generate_report`
-- `export_customer_emails`
-- `delete_dataset`
-- `list_reports`
-
-Relevant files:
-
-- `src/protected-resource/server.js`
-- `src/protected-resource/demo-db.js`
-- `src/protected-resource/auth.js`
-
-### Dashboard and Approval Flow
-
-The dashboard shows:
-
-- live or polled state updates
-- event timeline
-- pending approvals
-- generated reports
-- active runtime ports and PID
-
-Relevant files:
-
-- `public/index.html`
-- `public/app.js`
-- `public/styles.css`
-- `src/dashboard/event-bus.js`
-
-## Diagram Mapping
-
-The repository is organized to match the presentation diagram directly:
-
-- `User / Demo Driver`
-- `src/demo/client.js`
-- `src/demo/guided-attack.js`
-- `src/demo/presenter-mode.js`
-- `Agent Orchestrator`
-  - `src/orchestrator/server.js`
-  - `src/orchestrator/semantic-summary.js`
-- `Contextual Passport`
-  - `src/protocol/contextual-passport.js`
-- `Semantic Proxy (PEP)`
-  - `src/semantic-proxy/server.js`
-  - `src/semantic-proxy/policy-engine.js`
-  - `src/semantic-proxy/approval-gate.js`
-- `Inspector SLM (Local)`
-  - `src/inspector/server.js`
-  - `src/inspector/model-client.js`
-- `Protected MCP Server / Tools`
-  - `src/protected-resource/server.js`
-  - `src/protected-resource/demo-db.js`
-- `Runtime / Active Stack Discovery`
-  - `src/runtime/config.js`
-  - `src/runtime/active-stack.js`
-
-## Exportable Protocol Surface
-
-The repository now includes a protocol-oriented layer intended to be reusable outside this demo:
-
-- `src/protocol/contextual-passport.js`
-- `src/protocol/inspection.js`
-- `src/protocol/events.js`
-- `src/protocol/sender-constrained.js`
-- `src/protocol/index.js`
-
-These files define the shared concepts that other projects can adopt even if they implement their own:
-
-- orchestrator
-- proxy
-- inspector
-- approval workflow
-- protected MCP server
-
-## What Is Implemented
-
-This repository includes:
-
-- a real MCP SDK server
-- a real semantic enforcement proxy
-- a persistent SQLite demo database
-- resource-bound policy checks
-- local-model integration points for summarization and inspection
-- browser-based approval UX
-- presenter mode for a scripted end-to-end demo
-
-This repository does not claim:
-
-- full OAuth 2.0 / RFC 8707 production integration
-- a hardened production identity system
-- audited LLM safety guarantees
-- benchmarked SLOs for every environment
-
-It is best understood as a production-style security demo and reference implementation.
-
-## Security Claims
-
-This project demonstrates the following security properties:
-
-- Intent-bound authorization: tool use is evaluated against the original user request, not only static tool permissions.
-- Signed contextual binding: the orchestrator issues a signed JWT that carries the semantic summary, allowed tool scopes, and resource indicators for the session.
-- Audience binding against the protected resource server: a passport issued for one resource server cannot be replayed against another trusted resource.
-- Sender-constrained token use: the protected resource requires a DPoP-style proof tied to the proxy's private key, so possession of the JWT string alone is not sufficient.
-- Resource binding enforcement: a tool call can be denied even if the tool itself is authorized, when the requested dataset or target resource falls outside the bound context.
-- Semantic inspection before execution: suspicious calls are evaluated before they reach the protected MCP server.
-- Human approval for high-risk actions: calls that are technically authorized but semantically suspicious can be paused for review instead of immediately executing.
-- Protected-side isolation: the protected MCP server is not reached when the proxy denies or holds a call.
-- Short-lived permits: passports are intentionally short-lived and scoped to the current task.
-- Auditability for demos and reviews: the dashboard and event stream make enforcement decisions visible in real time.
-
-This project does not claim the following:
-
-- formal proof of semantic correctness
-- comprehensive protection against all prompt injection or jailbreak techniques
-- complete standards-compliant OAuth or RFC 8707 deployment
-- production-grade identity, key management, or distributed approval workflows
-- guaranteed model behavior under all inputs or hardware conditions
-
-The recommended framing is: this repository is a working reference implementation and security demo for semantic MCP enforcement, not a finished enterprise security product.
-
-## Installation
-
-Requirements:
-
-- Node.js 20+
-- npm
-- optional: Ollama-compatible model host
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-## Model Configuration
-
-The model integration expects an Ollama-compatible endpoint.
-
-The runtime accepts either:
-
-- `OLLAMA_HOST=127.0.0.1`
-- `OLLAMA_HOST=127.0.0.1:11434`
-- `OLLAMA_HOST=http://127.0.0.1:11434`
-- `OLLAMA_URL=http://127.0.0.1:11434/api/generate`
-
-Default:
-
-```bash
-OLLAMA_HOST=127.0.0.1:11434
-```
-
-Example startup:
-
-```bash
-OLLAMA_HOST=127.0.0.1:11434 OLLAMA_MODEL=qwen3-vl:8b REQUIRE_MODEL=1 npm start
-```
-
-If the model host is running elsewhere:
-
-```bash
-OLLAMA_HOST=HOST:11434
-```
-
-A bare host is also accepted and will default to port `11434`:
-
-```bash
-OLLAMA_HOST=192.168.0.141
-```
-
-If necessary, the full generate endpoint can be overridden directly:
-
-```bash
-OLLAMA_URL=http://HOST:11434/api/generate
-```
-
-Notes:
-
-- `REQUIRE_MODEL=1` forces model-backed paths to succeed or fail explicitly.
-- Without `REQUIRE_MODEL=1`, the system may fall back to deterministic logic if the model call fails.
-- Passports are short-lived by default. Override with `PASSPORT_TTL_SECONDS` only if you intentionally need a longer-lived demo token.
-- The model client accepts single JSON responses and streamed NDJSON chunk responses from Ollama.
-- Some models, including `qwen3-vl:8b`, may place useful JSON in `thinking` rather than `response`. The current parser handles that shape.
-- After changing model-related environment variables or parser code, restart the stack. Running processes do not hot-reload configuration.
-
-## Running the System
-
-### Standard Mode
-
-Start the stack:
-
-```bash
-npm start
-```
-
-Open the dashboard:
-
-```text
-http://127.0.0.1:4000/dashboard/
-```
-
-### Presenter Mode
-
-Presenter mode starts the stack on presenter-safe ports, writes those ports to `.runtime/active-stack.json`, and keeps the stack running until you stop it.
-
-```bash
-npm run presenter
-```
-
-Open:
-
-```text
-http://127.0.0.1:4500/dashboard/
-```
-
-By default, presenter mode also runs the scripted `allow -> block -> approve` sequence once and then leaves the stack up for discussion or extra manual demo commands.
-
-If you want presenter-safe ports without the scripted sequence, use:
-
-```bash
-PRESENTER_AUTO_RUN=0 npm run presenter
-```
-
-Presenter mode is the recommended path for live demos and rehearsals.
-
-## Port Alignment and Runtime Discovery
-
-When the stack starts, it writes the active runtime configuration to:
-
-`.runtime/active-stack.json`
-
-The demo scripts read this file automatically. That means:
-
-- if `npm start` is the active stack, `npm run demo:allow` targets that stack
-- if `npm run presenter` is the active stack, `npm run demo:allow` targets the presenter stack
-
-The dashboard also shows the active proxy and orchestrator ports so mismatches are visible.
-
-Each `demo:*` command also prints the proxy and orchestrator ports it is targeting before sending the request.
-
-## Demo Commands
-
-The demo commands are designed to be run against the currently active stack:
-
-```bash
-npm run demo:allow
-npm run demo:block
-npm run demo:approve
-npm run demo:guided
-```
-
-What they do:
-
-- `demo:allow`
-  Sends a benign, in-scope report-generation request that should succeed.
-- `demo:block`
-  Sends a request that violates resource binding and should be blocked by policy.
-- `demo:approve`
-  Sends a suspicious but technically authorized request that should pause for human approval.
-- `demo:guided`
-  Runs a narrated, step-by-step version of the full attacker story.
-
-Before running a demo command, make sure the stack is already running with either `npm start` or `npm run presenter`.
-
-## What to Expect in the Dashboard
-
-During a successful demo run, the dashboard should show:
-
-- new entries in the event timeline
-- new reports after successful report-generation flows
-- a temporary approval request during approval-gated scenarios
-- runtime metadata showing which stack the dashboard belongs to
-
-If reports appear but the timeline does not update, that usually indicates you are looking at a different running stack than the one receiving the demo traffic.
-
-If a demo command fails before the dashboard changes:
-
-- `Invalid Intent JWT` usually means the demo command reached a different stack than the dashboard.
-- `connect ECONNREFUSED ...11434` usually means the model host or port is wrong.
-- `Model returned an empty response body` usually means the selected model returned an unsupported or incomplete payload shape, or the stack needs to be restarted after a parser/config fix.
-
-The demo client now validates that the proxy and orchestrator look like the active stack before it sends the scenario request.
-
-## Testing
-
-Run the automated tests:
+Without a model host, run `INSPECTOR_MODE=heuristic SUMMARIZER_MODE=deterministic npm start`.
+
+## Configuration
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `OLLAMA_HOST` / `OLLAMA_URL` | `127.0.0.1:11434` | Model host (`OLLAMA_URL` is the full `/api/generate` URL) |
+| `OLLAMA_MODEL` | `qwen3-vl:8b` | Model for summarizer and inspector |
+| `INSPECTOR_MODE` | `ensemble` | `heuristic`, `model`, or `ensemble` (model OR heuristic) |
+| `INSPECTOR_PROMPT` | `hardened` | `hardened` or `naive` (the original prompt, kept for comparison) |
+| `SUMMARIZER_MODE` | `model` | `model` or `deterministic` |
+| `REQUIRE_MODEL` | off | `1` makes model failures hard errors instead of falling back to rules |
+| `VIOLATION_THRESHOLD` | `0.7` | Minimum confidence for a violation to count |
+| `AUTO_BLOCK_THRESHOLD` | `0.95` | Confidence at which a low-risk call is blocked rather than held |
+| `APPROVAL_TIMEOUT_MS` | `30000` | A held call is denied when this expires |
+| `PASSPORT_TTL_SECONDS` | `300` | Passport lifetime |
+| `ORCHESTRATOR_CLIENT_TOKEN`, `APPROVER_TOKEN` | generated | Otherwise read from `.runtime/secrets.json` |
+| `MODEL_SEED`, `MODEL_TEMPERATURE` | unset, `0.1` | Sampling controls (used by the experiments) |
+| `LOG_LEVEL` | `info` | Fastify log level |
+
+Keys and secrets are generated on first run under `.runtime/` (mode 0600):
+`orchestrator-signing.json` (passport signing key), `proxy-identity.json` (DPoP key),
+`secrets.json` (client and approver tokens). **None of these may be given to the agent process.**
+In a real deployment each component would hold only its own private key.
+
+## Security properties
+
+What the implementation enforces, and what tests or experiments check it:
+
+- **Intent-bound scopes.** Tool scopes derive from the summarized intent; explicit scopes are a recorded user grant (`scope_source`). Only the trusted client can mint passports.
+- **Unforgeable passports.** ES256 signature by the issuer; verifiers hold only the public key; `alg` pinned.
+- **Resource binding, fail-closed.** Declared resource arguments plus any URI-shaped argument value must be in `resource_indicators`; enforced for `tools/call` and `resources/read`.
+- **Narrow protocol surface.** One JSON-RPC object per request, method allowlist.
+- **Semantic inspection, fail-closed.** Malformed or failed verdicts deny the call.
+- **Authenticated human approval.** Approver token required; timeouts deny; the dashboard escapes all agent-controlled text and sends a strict CSP.
+- **Sender-constrained, non-replayable forwarding.** DPoP-style proof bound to method, URL, and token hash, with a `jti` replay cache; the resource server re-checks scope and binding.
+- **No prompt in the token.** Only `prompt_sha256` travels.
+
+This project does **not** claim formal guarantees about model judgement, complete
+prompt-injection resistance, a standards-complete OAuth 2.0 / RFC 9449 deployment, or
+production key management. Known limitations are listed in
+[`docs/SECURITY_FINDINGS.md`](docs/SECURITY_FINDINGS.md) and [`experiments/README.md`](experiments/README.md).
+
+## Results at a glance
+
+From the evaluation in [`experiments/`](experiments/README.md) (73 scenarios, three local models).
+Aggregated tables are in `experiments/results/summary/`.
+
+- Of ten flaws found in v1.0.0, nine were exploited end to end (E2) and one, dashboard script injection, was confirmed by inspection. All are prevented in v1.1.0.
+- The Tamarin model in [`formal/`](formal/) verifies the protocol properties of v1.1.0 and reproduces each v1.0.0 flaw as an attack. It also found the request-body binding gap fixed in v1.1.0.
+- Deterministic layers (scope + resource binding) stop all scope and resource escalation but none of the in-scope semantic misuse.
+- The inspector closes most of that gap, at a measurable cost in benign calls held or blocked; per-model numbers are in `experiments/results/summary/e1-metrics.csv`.
+- On multi-step sessions derived from AgentDojo, attack detection transfers (96–100%), but small judges hold many legitimate intermediate steps. Passing the session history to the judge halves those false alarms for the strongest model tested (`experiments/results/summary/e6-agentdojo.csv`).
+
+To rerun everything: `OLLAMA_HOST=<host>:11434 sh experiments/run-all.sh` (prerequisites in [`experiments/README.md`](experiments/README.md)).
+
+## Tests
 
 ```bash
 npm test
 ```
 
-The test suite covers:
+40 tests cover the allow, deny, and approval paths, sender-constrained tokens, and a
+regression test for each finding in `docs/SECURITY_FINDINGS.md`.
 
-- allow path
-- resource binding deny path
-- approval-gated forward path
+## Project structure
 
-## Project Structure
+```
+src/
+  orchestrator/       intent summarization and passport issuance
+  protocol/           passport, DPoP proofs, inspection contract, bearer helpers
+  semantic-proxy/     PEP: policy engine, approvals, inspector client
+  inspector/          rules, prompts, model client
+  protected-resource/ MCP SDK server, auth, SQLite demo data
+  runtime/            config, keys and secrets, active-stack discovery
+  dashboard/, demo/   event bus, demo scripts, presenter mode
+public/               dashboard UI
+test/                 vitest suites
+experiments/          corpus, harnesses, analysis, raw and summarized results
+formal/               Tamarin model of the protocol and the script that proves it
+docs/                 flow diagram (TikZ source; rebuild with docs/build-figures.sh), security findings
+```
 
-- `src/index.js`: entry point for the full stack
-- `src/protocol/`: shared protocol contracts for passports, inspection, and policy events
-- `src/orchestrator/`: prompt registration, semantic summary, and passport issuance
-- `src/semantic-proxy/`: interception, policy enforcement, inspection calls, and approval gate
-- `src/inspector/`: local model-backed inspection service
-- `src/protected-resource/`: protected MCP server and demo dataset
-- `src/runtime/`: runtime configuration and active stack discovery
-- `src/dashboard/`: dashboard-facing event infrastructure
-- `src/demo/`: scenario runners and presenter mode
+## Troubleshooting
 
-## Known Limitations
+- `Invalid Intent JWT`: the demo reached a different stack than the dashboard, or `.runtime/` keys were regenerated after the token was issued. Restart the stack.
+- `Orchestrator client credential required`: the caller did not send `ORCHESTRATOR_CLIENT_TOKEN` (the demo scripts read it from `.runtime/secrets.json`).
+- `Semantic inspection unavailable` (503): the inspector failed and the proxy failed closed. Check the model host, or use `INSPECTOR_MODE=heuristic`.
+- `connect ECONNREFUSED ...11434`: wrong model host or port.
+- Reasoning models returning empty output: the client sends `think: false`; restart after changing models.
 
-- Event history is in-memory and resets when the process restarts.
-- Generated reports are stored in SQLite and therefore persist across restarts unless the database is cleared.
-- Model-backed behavior depends on the availability and health of the configured Ollama-compatible host.
-- Large local models may fail for environment-specific reasons such as memory pressure.
-- The current DPoP-style sender constraint is a focused implementation for this demo and reference architecture, not a full production OAuth deployment.
+## License
 
-## Recommended Demo Flow
-
-For a live presentation:
-
-1. Start with `npm run presenter`.
-2. Open `http://127.0.0.1:4500/dashboard/`.
-3. Narrate the three phases:
-   benign request, blocked attack, approval-gated suspicious request.
-4. Use the timeline and approval panel as the primary visual story.
-
-## License / Usage
-
-No explicit license has been added in this repository beyond the current package metadata. Add a project license if the repository will be shared publicly.
+MIT, see [`LICENSE`](LICENSE).

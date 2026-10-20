@@ -3,10 +3,12 @@ import { config as baseConfig } from "../src/runtime/config.js";
 import { issueIntentPassport } from "../src/protocol/contextual-passport.js";
 import { buildInspectorServer } from "../src/inspector/server.js";
 import { buildProxyServer } from "../src/semantic-proxy/server.js";
+import { createInspectionRequest, parseInspectionResponse } from "../src/protocol/inspection.js";
 
 const config = {
   ...baseConfig,
   ollamaModel: "",
+  logLevel: "silent",
   requireModel: false,
   approvalTimeoutMs: 2000,
 };
@@ -27,15 +29,9 @@ async function boot() {
       const response = await inspector.inject({
         method: "POST",
         url: "/inspect",
-        payload: {
-          userIntent: passport.summary,
-          originalPrompt: passport.prompt,
-          tool: toolCall,
-          allowedScopes: passport.tool_scopes,
-          resources: passport.resource_indicators,
-        },
+        payload: createInspectionRequest({ passport, toolCall }),
       });
-      return response.json();
+      return parseInspectionResponse(response.json());
     },
     forwardRpc: async (rpc) => ({
       jsonrpc: "2.0",

@@ -1,0 +1,1 @@
+system,model,n_benign_calls,n_attack_pairs,detect_final,detect_lo,detect_hi,detect_any,benign_flag_rate,fpr_lo,fpr_hi,benign_task_friction,failures,per_suite

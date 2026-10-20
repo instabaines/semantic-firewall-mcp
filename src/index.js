@@ -12,6 +12,8 @@ async function start(name, app, port) {
 }
 
 const mode = process.argv[2] || "all";
+console.log(`Approver token for the dashboard: ${config.approverToken}`);
+console.log("Secrets and keys live in .runtime/ (never give these to the agent process).");
 getDb(config);
 writeRuntimeEnv(config);
 

@@ -1,0 +1,230 @@
+/*
+ * Symbolic model of SemFW's credential and mediation protocol (Tamarin).
+ *
+ * Parties: trusted client (credential c), intent issuer (sk_I), proxy (sk_P),
+ * human approver (credential a), MCP server. The agent is the Dolev-Yao
+ * adversary: it controls the network, receives every passport, and may send
+ * anything to anyone.
+ *
+ * The inspector is not modelled. It can only turn an allow into a hold or block
+ * (it runs after the deterministic checks), so omitting it is the worst case: every property proven here
+ * holds for every inspector behaviour, including a fully deceived one.
+ *
+ * The approver approves every call it is shown (rubber stamp). P7 therefore
+ * states that only the approver can release a held call, not that it judges well.
+ *
+ * Variants (tamarin-prover -D=FLAG):
+ *   LEGACY_ISSUANCE    issuer does not authenticate the client      (v1.0, X1)
+ *   LEGACY_APPROVAL    approval decisions are unauthenticated       (v1.0, X6)
+ *   NO_REPLAY_CACHE    server does not track proof identifiers      (v1.0, X9)
+ *   NO_SERVER_RECHECK  server does not re-check scope and binding   (v1.0, X9)
+ *   BODY_BINDING       proof also binds a hash of the request body  (v1.1 + fix)
+ */
+
+theory SemanticFirewall
+begin
+
+builtins: signing, hashing, multiset
+
+/* ------------------------------------------------------------ restrictions */
+
+restriction Equality:
+  "All x y #i. Eq(x, y) @ i ==> x = y"
+
+restriction Member:
+  "All x s #i. Member(x, s) @ i ==> (Ex z. s = x + z) | (s = x)"
+
+restriction OneIssuer:   "All #i #j. SetupI() @ i & SetupI() @ j ==> #i = #j"
+restriction OneProxy:    "All #i #j. SetupP() @ i & SetupP() @ j ==> #i = #j"
+restriction OneClient:   "All #i #j. SetupC() @ i & SetupC() @ j ==> #i = #j"
+restriction OneApprover: "All #i #j. SetupA() @ i & SetupA() @ j ==> #i = #j"
+restriction OneRegistry: "All #i #j. SetupR() @ i & SetupR() @ j ==> #i = #j"
+
+#ifndef NO_REPLAY_CACHE
+// Server-side replay cache: a proof identifier is accepted at most once.
+restriction ReplayCache:
+  "All j #i #k. SeenProof(j) @ i & SeenProof(j) @ k ==> #i = #k"
+#endif
+
+/* ------------------------------------------------------------ setup */
+
+rule Setup_Issuer:
+  [ Fr(~skI) ] --[ SetupI() ]-> [ !IssuerSK(~skI), !IssuerPK(pk(~skI)), Out(pk(~skI)) ]
+
+rule Setup_Proxy:
+  [ Fr(~skP) ] --[ SetupP() ]-> [ !ProxySK(~skP), !ProxyPK(pk(~skP)), Out(pk(~skP)) ]
+
+rule Setup_Client:
+  [ Fr(~c) ] --[ SetupC() ]-> [ !ClientCred(~c) ]
+
+rule Setup_Approver:
+  [ Fr(~a) ] --[ SetupA() ]-> [ !ApproverCred(~a) ]
+
+// Tool registry: one low-risk and one high-risk tool.
+rule Setup_Registry:
+  [ ] --[ SetupR(), HighTool('delete') ]-> [ !Low('report'), !High('delete') ]
+
+/* ------------------------------------------------------------ compromise */
+
+rule Reveal_Issuer:   [ !IssuerSK(k) ]     --[ RevI() ]-> [ Out(k) ]
+rule Reveal_Proxy:    [ !ProxySK(k) ]      --[ RevP() ]-> [ Out(k) ]
+rule Reveal_Client:   [ !ClientCred(k) ]   --[ RevC() ]-> [ Out(k) ]
+rule Reveal_Approver: [ !ApproverCred(k) ] --[ RevA() ]-> [ Out(k) ]
+
+/* ------------------------------------------------------------ issuance (P1) */
+
+// The user may ask for any scope set Sc and resource set Rs; the client
+// authenticates the request with its credential.
+rule Client_Request:
+  [ !ClientCred(c), In(<Sc, Rs>), Fr(~n) ]
+  --[ UserRequested(Sc, Rs, ~n) ]->
+  [ Out(<'req', Sc, Rs, ~n, h(<c, Sc, Rs, ~n>)>) ]
+
+#ifdef LEGACY_ISSUANCE
+rule Issue_Passport:
+  [ !IssuerSK(skI), !ProxyPK(pkP), In(<'req', Sc, Rs, n, mac>), Fr(~jti) ]
+  --[ Issued(Sc, Rs, ~jti) ]->
+  [ Out(<<'pp', Sc, Rs, 'srv', pkP, ~jti>, sign(<'pp', Sc, Rs, 'srv', pkP, ~jti>, skI)>) ]
+#else
+rule Issue_Passport:
+  [ !IssuerSK(skI), !ClientCred(c), !ProxyPK(pkP), In(<'req', Sc, Rs, n, h(<c, Sc, Rs, n>)>), Fr(~jti) ]
+  --[ Issued(Sc, Rs, ~jti) ]->
+  [ Out(<<'pp', Sc, Rs, 'srv', pkP, ~jti>, sign(<'pp', Sc, Rs, 'srv', pkP, ~jti>, skI)>) ]
+#endif
+
+/* ------------------------------------------------------------ proxy (P2, P3) */
+
+// Low-risk tool in scope and on a bound resource: forward with a proof.
+rule Proxy_Forward_Low:
+  let pp = <'pp', Sc, Rs, 'srv', pkP, jti>
+      pi = <pp, sig>
+#ifdef BODY_BINDING
+      pm = <'dpop', h(pi), h(<t, r>), ~pj>
+#else
+      pm = <'dpop', h(pi), ~pj>
+#endif
+  in
+  [ In(<'call', t, r, pi>), !IssuerPK(pkI), !ProxySK(skP), !Low(t), Fr(~pj) ]
+  --[ Eq(verify(sig, pp, pkI), true), Eq(pkP, pk(skP)), Member(t, Sc), Member(r, Rs),
+      ProxyForwarded(t, r, pi, ~pj) ]->
+  [ Out(<'fwd', t, r, pi, <pm, sign(pm, skP)>>) ]
+
+// High-risk tool: held until the approver releases it.
+rule Proxy_Hold_High:
+  let pp = <'pp', Sc, Rs, 'srv', pkP, jti>
+      pi = <pp, sig>
+  in
+  [ In(<'call', t, r, pi>), !IssuerPK(pkI), !High(t), Fr(~cid) ]
+  --[ Eq(verify(sig, pp, pkI), true), Member(t, Sc), Member(r, Rs), Held(~cid, t, r) ]->
+  [ Pending(~cid, t, r, pi), Out(<'pending', ~cid, t, r>) ]
+
+// The approver sees the held call and (worst case) approves it.
+rule Approver_Approve:
+  [ !ApproverCred(a), In(<'pending', cid, t, r>) ]
+  --[ Approved(cid, t, r) ]->
+  [ Out(<'approve', cid, h(<a, cid, t, r>)>) ]
+
+#ifdef LEGACY_APPROVAL
+rule Proxy_Release:
+  let
+#ifdef BODY_BINDING
+      pm = <'dpop', h(pi), h(<t, r>), ~pj>
+#else
+      pm = <'dpop', h(pi), ~pj>
+#endif
+  in
+  [ Pending(cid, t, r, pi), In(<'approve', cid, anything>), !ProxySK(skP), Fr(~pj) ]
+  --[ Released(cid, t, r), ProxyForwarded(t, r, pi, ~pj) ]->
+  [ Out(<'fwd', t, r, pi, <pm, sign(pm, skP)>>) ]
+#else
+rule Proxy_Release:
+  let
+#ifdef BODY_BINDING
+      pm = <'dpop', h(pi), h(<t, r>), ~pj>
+#else
+      pm = <'dpop', h(pi), ~pj>
+#endif
+  in
+  [ Pending(cid, t, r, pi), !ApproverCred(a), In(<'approve', cid, h(<a, cid, t, r>)>), !ProxySK(skP), Fr(~pj) ]
+  --[ Released(cid, t, r), ProxyForwarded(t, r, pi, ~pj) ]->
+  [ Out(<'fwd', t, r, pi, <pm, sign(pm, skP)>>) ]
+#endif
+
+/* ------------------------------------------------------------ server (P5) */
+
+rule Server_Execute:
+  let pp = <'pp', Sc, Rs, 'srv', pkP, jti>
+      pi = <pp, sig>
+#ifdef BODY_BINDING
+      pm = <'dpop', h(pi), h(<t, r>), pj>
+#else
+      pm = <'dpop', h(pi), pj>
+#endif
+  in
+  [ In(<'fwd', t, r, pi, <pm, psig>>), !IssuerPK(pkI) ]
+  --[ Eq(verify(sig, pp, pkI), true), Eq(verify(psig, pm, pkP), true),
+#ifndef NO_SERVER_RECHECK
+      Member(t, Sc), Member(r, Rs),
+#endif
+      SeenProof(pj),
+      Executed(t, r, pi, pj) ]->
+  [ ]
+
+/* ------------------------------------------------------------ sanity */
+
+lemma executable_low:
+  exists-trace
+  "Ex r pi pj #i. Executed('report', r, pi, pj) @ i
+     & not (Ex #k. RevI() @ k) & not (Ex #k. RevP() @ k)
+     & not (Ex #k. RevC() @ k) & not (Ex #k. RevA() @ k)"
+
+lemma executable_high:
+  exists-trace
+  "Ex r pi pj #i. Executed('delete', r, pi, pj) @ i
+     & not (Ex #k. RevI() @ k) & not (Ex #k. RevP() @ k)
+     & not (Ex #k. RevC() @ k) & not (Ex #k. RevA() @ k)"
+
+/* ------------------------------------------------------------ properties */
+
+// P1: every executed call is covered by a passport issued for a user request.
+lemma P1_authentic_intent:
+  "All t r Sc Rs pkP jti sig pj #i.
+     Executed(t, r, <<'pp', Sc, Rs, 'srv', pkP, jti>, sig>, pj) @ i
+     ==> (Ex n #j. UserRequested(Sc, Rs, n) @ j & #j < #i)
+       | (Ex #k. RevI() @ k) | (Ex #k. RevC() @ k)"
+
+// P2, P3: every executed call names a tool in Sc and a resource in Rs.
+lemma P23_confinement:
+  "All t r Sc Rs pkP jti sig pj #i.
+     Executed(t, r, <<'pp', Sc, Rs, 'srv', pkP, jti>, sig>, pj) @ i
+     ==> ((Ex z. Sc = t + z) | (Sc = t)) & ((Ex z. Rs = r + z) | (Rs = r))"
+
+// P5 (sender constraint): every executed call is one the proxy forwarded,
+// with this exact tool, resource, passport and proof. (The confirmation key
+// comes from the passport, so issuer-key secrecy is also required.)
+lemma P5_sender_constraint:
+  "All t r pi pj #i. Executed(t, r, pi, pj) @ i
+     ==> (Ex #j. ProxyForwarded(t, r, pi, pj) @ j & #j < #i)
+       | (Ex #k. RevP() @ k) | (Ex #k. RevI() @ k)"
+
+// P5 (freshness): a proof is accepted at most once.
+lemma P5_no_replay:
+  "All t r t2 r2 pi pi2 pj #i #i2.
+     Executed(t, r, pi, pj) @ i & Executed(t2, r2, pi2, pj) @ i2
+     ==> #i = #i2"
+
+// Witness for P5 (freshness): a trace in which one proof is accepted twice
+// without any compromise. Expected to exist only when the replay cache is absent.
+lemma replay_witness:
+  exists-trace
+  "Ex t r pi pj #i #i2. Executed(t, r, pi, pj) @ i & Executed(t, r, pi, pj) @ i2 & not (#i = #i2)
+     & not (Ex #k. RevI() @ k) & not (Ex #k. RevP() @ k)
+     & not (Ex #k. RevC() @ k) & not (Ex #k. RevA() @ k)"
+
+// P7: an executed high-risk call was approved by the approver.
+lemma P7_consent_integrity:
+  "All t r pi pj #i #h. Executed(t, r, pi, pj) @ i & HighTool(t) @ h
+     ==> (Ex cid #j. Approved(cid, t, r) @ j & #j < #i)
+       | (Ex #k. RevA() @ k) | (Ex #k. RevP() @ k) | (Ex #k. RevI() @ k)"
+
+end

@@ -1,0 +1,17 @@
+family,history,model,fpr,detect
+ac,0,gemma,29.4,98.0
+ac,0,llama,26.1,92.7
+ac,0,qwen,47.7,96.0
+progent,0,gemma,52.3,96.7
+progent,0,llama,67.3,90.1
+progent,0,qwen,77.8,98.7
+ours,0,gemma,32.4,98.7
+rules,0,none,4.8,32.5
+ours,0,llama,52.3,98.0
+ours,0,qwen,91.0,100.0
+ac,1,gemma,7.2,96.0
+ac,1,llama,13.5,88.7
+ac,1,qwen,27.9,55.0
+ours,1,gemma,14.7,96.0
+ours,1,llama,49.8,99.3
+ours,1,qwen,92.8,100.0

@@ -1,0 +1,11 @@
+{
+  "title": "Semantic Firewall for MCP: Intent-Bound Authorization of Agent Tool Calls",
+  "upload_type": "software",
+  "description": "Reference implementation, benchmark corpus (73 tool-call scenarios, 12 protocol attacks, AgentDojo-derived transfer study, Tamarin model), raw results, and evaluation harness for intent-bound authorization of Model Context Protocol (MCP) tool calls. See README.md, experiments/README.md and formal/ for details.",
+  "creators": [
+    { "name": "[FAMILY NAME], [GIVEN NAME]", "affiliation": "[AFFILIATION]" }
+  ],
+  "license": "MIT",
+  "keywords": ["Model Context Protocol", "MCP", "LLM agents", "prompt injection", "authorization", "policy enforcement", "DPoP"],
+  "access_right": "open"
+}

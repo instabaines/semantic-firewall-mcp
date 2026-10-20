@@ -1,20 +1,24 @@
 import { listDatasets } from "../protected-resource/demo-db.js";
 import { generateJsonWithModel } from "../inspector/model-client.js";
 
-function fallbackSummary(prompt, datasets) {
+const INTENT_TYPES = ["report", "read", "export", "delete", "unknown"];
+
+export function fallbackSummary(prompt, datasets) {
   const normalized = String(prompt || "").toLowerCase();
-  const matched = datasets.filter((dataset) =>
-    normalized.includes(dataset.id.toLowerCase()) ||
-    normalized.includes(dataset.name.toLowerCase()),
-  );
+  const matched = datasets.filter((dataset) => {
+    const id = dataset.id.toLowerCase();
+    const name = dataset.name.toLowerCase();
+    const reversed = name.split(/\s+/).reverse().join(" ");
+    return [id, name, reversed].some((alias) => normalized.includes(alias));
+  });
 
   let intentType = "read";
-  if (normalized.includes("report") || normalized.includes("summary")) {
-    intentType = "report";
-  } else if (normalized.includes("delete") || normalized.includes("remove")) {
+  if (normalized.includes("delete") || normalized.includes("remove")) {
     intentType = "delete";
-  } else if (normalized.includes("email") || normalized.includes("export")) {
+  } else if (normalized.includes("export") || normalized.includes("email list") || normalized.includes("contact list")) {
     intentType = "export";
+  } else if (normalized.includes("report") || normalized.includes("summary") || normalized.includes("summarize")) {
+    intentType = "report";
   }
 
   return {
@@ -47,7 +51,7 @@ ${JSON.stringify(datasetCatalog)}
 User prompt:
 ${prompt}`;
 
-  if (config.ollamaModel) {
+  if (config.ollamaModel && config.summarizerMode !== "deterministic") {
     try {
       const parsed = await generateJsonWithModel({
         config,
@@ -55,10 +59,15 @@ ${prompt}`;
         maxTokens: 220,
       });
 
+      // The model may only select from the catalog; it cannot invent resource URIs.
+      const known = new Set(datasets.map((dataset) => dataset.uri));
+      const intentType = INTENT_TYPES.includes(parsed.intentType) ? parsed.intentType : "unknown";
       return {
         summary: parsed.summary || String(prompt || "").trim(),
-        intentType: parsed.intentType || "unknown",
-        requestedResourceUris: Array.isArray(parsed.requestedResourceUris) ? parsed.requestedResourceUris : [],
+        intentType,
+        requestedResourceUris: Array.isArray(parsed.requestedResourceUris)
+          ? parsed.requestedResourceUris.filter((uri) => known.has(uri))
+          : [],
         rationale: parsed.rationale || "Model-derived semantic summary.",
       };
     } catch (error) {

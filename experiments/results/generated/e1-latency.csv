@@ -1,0 +1,13 @@
+config,model,p50,p95
+C0,none,2.6,6.2
+C1,none,2.3,4.4
+C2,none,2.2,4.1
+C3,none,2.5,8.9
+C4,qwen2.5:3b,933.6,1239.5
+C4,gemma4:latest,1195.1,1590.8
+C5,qwen2.5:3b,345.4,386.6
+C5,llama3.1:8b,1520.2,1702.8
+C5,gemma4:latest,530.2,831.6
+C6,qwen2.5:3b,345.4,378.9
+C6,llama3.1:8b,1511.2,1688.8
+C6,gemma4:latest,523.2,728.3

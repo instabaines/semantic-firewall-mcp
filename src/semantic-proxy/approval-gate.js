@@ -15,9 +15,13 @@ export class ApprovalStore {
       rejectPromise = reject;
     });
 
+    // A timeout is a denial, never an implicit approval.
     const timer = setTimeout(() => {
-      this.pending.delete(id);
-      rejectPromise(new Error("Approval timed out"));
+      this.pending.get(id)?.resolve({
+        approved: false,
+        approver: "timeout",
+        decidedAt: new Date().toISOString(),
+      });
     }, this.timeoutMs);
 
     const stored = {

@@ -1,0 +1,43 @@
+{
+  "startedAt": "2026-10-19T02:41:05.002Z",
+  "node": "v22.22.1",
+  "platform": "linux 7.0.0-38-generic Intel(R) Core(TM) Ultra 7 365 x8",
+  "cases": 73,
+  "scenariosSha256": "d661600b0b3e1a3e4c02c58d542f304c6ca92e43a7bd66b0eab82c55b5a8b621",
+  "gitHead": "ce51701f3a9eab062a29194800120b39fae94571",
+  "gitDirty": true,
+  "ollamaUrl": "http://<gpu-host>:11434/api/generate",
+  "ollamaVersion": "0.40.6",
+  "ollamaModels": [
+    {
+      "name": "gemma4:latest",
+      "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+      "quantization": "Q4_K_M"
+    },
+    {
+      "name": "llama3.1:8b",
+      "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+      "quantization": "Q4_K_M"
+    },
+    {
+      "name": "qwen2.5:3b",
+      "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+      "quantization": "Q4_K_M"
+    },
+    {
+      "name": "gemma3:latest",
+      "digest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+      "quantization": "Q4_K_M"
+    }
+  ],
+  "args": {
+    "configs": [
+      "C6",
+      "C4"
+    ],
+    "models": [
+      "gemma4:latest"
+    ],
+    "reps": 3
+  }
+}
