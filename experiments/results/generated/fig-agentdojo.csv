@@ -15,6 +15,12 @@ ac,1,qwen,27.9,55.0
 ours,1,gemma,14.7,96.0
 ours,1,llama,49.8,99.3
 ours,1,qwen,92.8,100.0
+rules,0,gemma,6.9,91.4
+rules,0,gemma,2.7,72.8
+rules,0,llama,40.5,96.0
+rules,0,llama,15.6,76.8
+rules,0,qwen,63.7,91.4
+rules,0,qwen,2.7,72.2
 rules,0,gemma,6.3,88.1
 rules,0,llama,27.0,88.7
 rules,0,qwen,63.1,88.7

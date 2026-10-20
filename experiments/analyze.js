@@ -482,9 +482,9 @@ for (const file of fs.readdirSync(RAW).filter((f) => /^e6p-.+\.jsonl$/.test(f)))
       e6.push({ ...row, model, system: `Provenance (${taint} taint) + model`, flagged, failed: false });
     }
   }
-  if (taint !== "model") {
-    prov.forEach((row) => e6.push({ ...row, model: "none", system: `Provenance only (${taint} taint)`, flagged: row.violation, failed: false }));
-  }
+  // Provenance alone (no judge). For model taint, keyed by the taint model.
+  const taintModel = taint === "model" ? prov[0]?.model : "none";
+  prov.forEach((row) => e6.push({ ...row, model: taintModel, system: `Provenance only (${taint} taint)`, flagged: row.violation, failed: false }));
 }
 const e6Keys = [...new Set(e6.map((r) => `${r.system}|${r.model}`))];
 const e6Metrics = e6Keys.map((key) => {
@@ -588,11 +588,11 @@ ${e6Table.join("\n")}
   });
   fs.writeFileSync(path.join(GENERATED, "fig-agentdojo.csv"), `family,history,model,fpr,detect\n${rows.join("\n")}\n`);
   // pgfplots point commands: hollow = call judged alone, filled = with history/trace.
-  const MARK = { ours: "*", ac: "square*", progent: "triangle*", rules: "diamond*" };
+  const MARK = { ours: "*", ac: "square*", progent: "triangle*", rules: "diamond*", prov: "star" };
   const COLOR = { qwen: "cqwen", llama: "cllama", gemma: "cgemma", none: "cnone" };
-  const points = e6Metrics.filter((m) => m.system !== "SemFW (ensemble)" && m.system !== "SemFW (ensemble) + history").map((m) => {
-    const family = m.system.startsWith("SemFW") ? "ours" : m.system.startsWith("AlignmentCheck") ? "ac" : m.system.startsWith("Progent") ? "progent" : "rules";
-    const history = m.system.includes("history") || m.system.includes("trace");
+  const points = e6Metrics.filter((m) => !m.system.startsWith("SemFW (ensemble)") && (!m.system.startsWith("Provenance") || m.system === "Provenance (model taint) + model")).map((m) => {
+    const family = m.system.startsWith("Provenance") ? "prov" : m.system.startsWith("SemFW") ? "ours" : m.system.startsWith("AlignmentCheck") ? "ac" : m.system.startsWith("Progent") ? "progent" : "rules";
+    const history = m.system.includes("history") || m.system.includes("trace") || family === "prov";
     const color = COLOR[MODEL_KEY[m.model] || "none"];
     const fill = history || family === "progent" || family === "rules" ? color : "white";
     return `\\addplot[only marks, mark=${MARK[family]}, mark size=2pt, draw=${color}, fill=${fill}, forget plot] coordinates {(${pct(m.fpr.p)},${pct(m.detect.p)})};`;
@@ -707,7 +707,9 @@ for (const m of e5Metrics) {
   macros.push(macro(`${k}@asr`, pct(m.asr.p)), macro(`${k}@asrsem`, pct(m.asrSemantic.p)), macro(`${k}@benign`, pct(m.benignPass.p)));
 }
 const E6_KEY = { "Rules only": "rules", "Progent-LLM": "progent", AlignmentCheck: "ac", "AlignmentCheck + trace": "actrace",
-  "SemFW (model)": "model", "SemFW (model) + history": "modelh", "SemFW (ensemble)": "ens", "SemFW (ensemble) + history": "ensh" };
+  "SemFW (model)": "model", "SemFW (model) + history": "modelh", "SemFW (ensemble)": "ens", "SemFW (ensemble) + history": "ensh",
+  "Provenance (model taint) + model": "provm", "Provenance (rules taint) + model": "provr", "Provenance (oracle taint) + model": "provo",
+  "Provenance only (model taint)": "provonlym", "Provenance only (rules taint)": "provonlyr", "Provenance only (oracle taint)": "provonlyo" };
 for (const m of e6Metrics) {
   const k = `E6@${E6_KEY[m.system]}@${MODEL_KEY[m.model] || m.model}`;
   macros.push(macro(`${k}@detect`, pct(m.detect.p)), macro(`${k}@detectany`, pct(m.detectAny.p)), macro(`${k}@fpr`, pct(m.fpr.p)), macro(`${k}@friction`, pct(m.taskFriction.p)));
